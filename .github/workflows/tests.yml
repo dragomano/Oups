@@ -49,14 +49,14 @@ jobs:
   # The Rust suite runs on every platform the app is bundled for, so a
   # platform-gated API (a Tauri method that only exists on Windows, for
   # example) fails here instead of in the Build workflow. The runners match the
-  # bundle targets: Windows, Linux, macOS arm64 and macOS x86_64.
+  # bundle targets: Windows, Linux and macOS arm64.
   rust:
     name: Rust (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest, macos-13]
+        os: [windows-latest, ubuntu-latest, macos-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -81,6 +81,12 @@ jobs:
           libwebkit2gtk-4.1-dev build-essential curl wget file
           libxdo-dev libssl-dev libayatana-appindicator3-dev
           librsvg2-dev libfuse2
+
+      # The bundle resources live next to the exe, so the folder has to be in
+      # place before cargo runs the build script that checks for it.
+      - name: Bundle locales
+        if: runner.os != 'Windows'
+        run: cp -r locales src-tauri/locales
 
       - name: Format check (rustfmt)
         run: cargo fmt -- --check

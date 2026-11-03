@@ -71,7 +71,9 @@ jobs:
         include:
           - os: macos-latest
             target: aarch64-apple-darwin
-          - os: macos-13
+          # The Intel build cross-compiles on the arm64 runner: the macos-13
+          # label is no longer available.
+          - os: macos-latest
             target: x86_64-apple-darwin
     steps:
       - name: Checkout
