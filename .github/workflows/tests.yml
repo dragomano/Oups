@@ -46,9 +46,17 @@ jobs:
       - name: Frontend build (vite)
         run: pnpm build
 
+  # The Rust suite runs on every platform the app is bundled for, so a
+  # platform-gated API (a Tauri method that only exists on Windows, for
+  # example) fails here instead of in the Build workflow. The runners match the
+  # bundle targets: Windows, Linux, macOS arm64 and macOS x86_64.
   rust:
-    name: Rust (rustfmt + clippy + cargo test)
-    runs-on: windows-latest
+    name: Rust (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest, macos-13]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -62,6 +70,17 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          key: ${{ matrix.os }}
+
+      # The Linux runners need the Tauri system libraries before cargo can
+      # build the webview bindings.
+      - name: Install Tauri system dependencies
+        if: runner.os == 'Linux'
+        run: >-
+          sudo apt-get update && sudo apt-get install -y
+          libwebkit2gtk-4.1-dev build-essential curl wget file
+          libxdo-dev libssl-dev libayatana-appindicator3-dev
+          librsvg2-dev libfuse2
 
       - name: Format check (rustfmt)
         run: cargo fmt -- --check
