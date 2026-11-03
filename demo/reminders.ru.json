@@ -1,0 +1,247 @@
+{
+  "version": 1,
+  "exportedAt": "2026-10-11T22:52:12",
+  "reminders": [
+    {
+      "id": "",
+      "title": "Отчёт по кварталу",
+      "note": "Черновики лежат в общей папке",
+      "priority": "critical",
+      "startAt": "-9h",
+      "recurrence": {
+        "type": "interval",
+        "unit": "hours",
+        "n": 12
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+3h",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Позвонить в налоговую",
+      "note": "",
+      "priority": "high",
+      "startAt": "-6d19h",
+      "recurrence": {
+        "type": "weekly",
+        "weekdays": [1]
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+5h",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Резервная копия 1С",
+      "note": "",
+      "priority": "critical",
+      "startAt": "-15h",
+      "recurrence": {
+        "type": "interval",
+        "unit": "hours",
+        "n": 24
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+9h",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Ответить Саше в чате",
+      "note": "",
+      "priority": "normal",
+      "startAt": "+2h",
+      "recurrence": {
+        "type": "once"
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+2h",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Вынести мусор",
+      "note": "",
+      "priority": "normal",
+      "startAt": "-13h",
+      "recurrence": {
+        "type": "daily"
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+11h",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Планировать следующий квартал",
+      "note": "",
+      "priority": "high",
+      "startAt": "+3d",
+      "recurrence": {
+        "type": "once"
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+3d",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Обновить резервные копии",
+      "note": "",
+      "priority": "high",
+      "startAt": "-23d",
+      "recurrence": {
+        "type": "monthly",
+        "days": [18]
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+7d",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Записаться к стоматологу",
+      "note": "",
+      "priority": "high",
+      "startAt": "-14d",
+      "recurrence": {
+        "type": "interval",
+        "unit": "days",
+        "n": 30
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+16d",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Провести стратегическую сессию",
+      "note": "",
+      "priority": "critical",
+      "startAt": "-363d",
+      "recurrence": {
+        "type": "yearly",
+        "month": 10,
+        "day": 13
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+2d",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Посмотреть новый сериал",
+      "note": "",
+      "priority": "low",
+      "startAt": "+5d",
+      "recurrence": {
+        "type": "once"
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+5d",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Почитать про садоводство",
+      "note": "",
+      "priority": "low",
+      "startAt": "-5d",
+      "recurrence": {
+        "type": "interval",
+        "unit": "days",
+        "n": 14
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+9d",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Оплатить интернет",
+      "note": "",
+      "priority": "normal",
+      "startAt": "-24d",
+      "recurrence": {
+        "type": "monthly",
+        "days": [17]
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+6d",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    }
+  ]
+}

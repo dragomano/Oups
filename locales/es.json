@@ -1,0 +1,223 @@
+{
+  "meta": {
+    "code": "es",
+    "name": "Español",
+    "dir": "ltr",
+    "plural_forms": {
+      "one": 0,
+      "other": 1
+    }
+  },
+  "toolbar": {
+    "new": "Nuevo recordatorio",
+    "search": "Buscar recordatorios…",
+    "active": "Activos",
+    "done": "Completados",
+    "matrix": "Matriz",
+    "settings": "Ajustes",
+    "import": "Importar",
+    "export": "Exportar"
+  },
+  "window": {
+    "minimize": "Minimizar",
+    "maximize": "Maximizar",
+    "restore": "Restaurar",
+    "close": "Cerrar"
+  },
+  "list": {
+    "empty_title": "Aún no hay recordatorios",
+    "empty_hint": "Pulsa «Nuevo recordatorio» para crear el primero",
+    "no_match": "No se encontró nada",
+    "next_run": "Próxima ejecución",
+    "snoozed": "Pospuesto",
+    "completed": "Completado",
+    "overdue": "Atrasado",
+    "enable": "Activar",
+    "disable": "Desactivar",
+    "disabled": "Desactivado",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "duplicate": "Duplicar",
+    "copy_suffix": "(copia)"
+  },
+  "priority": {
+    "low": "Baja",
+    "normal": "Normal",
+    "high": "Alta",
+    "critical": "Crítica",
+    "badge": {
+      "low": "Prioridad baja",
+      "high": "Prioridad alta",
+      "critical": "Prioridad crítica"
+    },
+    "low_desc": "Tareas de fondo, fáciles de posponer",
+    "normal_desc": "Rutina y cosas del día a día",
+    "high_desc": "Afecta al resultado — conviene planificarlo",
+    "critical_desc": "Urgente e importante — hazlo ya",
+    "important": "importante",
+    "not_important": "no importante"
+  },
+  "rec": {
+    "once": "Una vez",
+    "daily": "Cada día",
+    "weekly": "Días de la semana",
+    "monthly": "Mensual",
+    "monthly_on": "Mensual el día {day}",
+    "yearly": "Anual",
+    "yearly_on": "Anual el {date}",
+    "interval": "Intervalo",
+    "monthly_on_multi": "Mensual los días {days}"
+  },
+  "units": {
+    "minutes": "Minutos",
+    "hours": "Horas",
+    "days": "Días",
+    "weeks": "Semanas",
+    "months": "Meses",
+    "years": "Años"
+  },
+  "every_one": {
+    "minutes": "Cada minuto",
+    "hours": "Cada hora",
+    "days": "Cada día",
+    "weeks": "Cada semana",
+    "months": "Cada mes",
+    "years": "Cada año"
+  },
+  "every_many": {
+    "minutes": "minuto|minutos",
+    "hours": "hora|horas",
+    "days": "día|días",
+    "weeks": "semana|semanas",
+    "months": "mes|meses",
+    "years": "año|años"
+  },
+  "weekdays_short": {
+    "1": "Lu",
+    "2": "Ma",
+    "3": "Mi",
+    "4": "Ju",
+    "5": "Vi",
+    "6": "Sá",
+    "7": "Do"
+  },
+  "weekdays_full": {
+    "1": "Lunes",
+    "2": "Martes",
+    "3": "Miércoles",
+    "4": "Jueves",
+    "5": "Viernes",
+    "6": "Sábado",
+    "7": "Domingo"
+  },
+  "end": {
+    "never": "Para siempre",
+    "after": "Después de",
+    "count_noun": "repetición|repeticiones",
+    "until": "Hasta la fecha"
+  },
+  "editor": {
+    "new_title": "Nuevo recordatorio",
+    "edit_title": "Editar recordatorio",
+    "title_label": "Título",
+    "title_placeholder": "Por ejemplo: sacar la basura",
+    "note_label": "Nota",
+    "note_placeholder": "Detalles opcionales",
+    "date_label": "Fecha",
+    "time_label": "Hora",
+    "priority_label": "Prioridad",
+    "recurrence_label": "Repetición",
+    "end_label": "Termina",
+    "day_of_month": "Día del mes",
+    "month": "Mes",
+    "day": "Día",
+    "every": "Cada",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "error_title": "Introduce un título",
+    "error_weekdays": "Elige al menos un día de la semana",
+    "error_date": "Elige una fecha de fin",
+    "error_days": "Elige al menos un día del mes",
+    "hint_past_start": "Ese momento ya pasó: el recordatorio aparecerá justo después de guardar",
+    "hint_end_before_start": "La fecha de fin es anterior al inicio: no habrá próxima ejecución",
+    "hint_count_used_up": "Todas las repeticiones ya se han cumplido: no habrá próxima ejecución"
+  },
+  "matrix": {
+    "empty": "Vacío",
+    "overdue": "atrasado",
+    "urgency": "urgencia",
+    "importance": "importancia",
+    "importance_low": "baja",
+    "importance_high": "alta",
+    "do": "Urgente e importante",
+    "delegate": "Urgente, no importante",
+    "schedule": "Importante, no urgente",
+    "drop": "Ni urgente ni importante"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "group_appearance": "Apariencia",
+    "language": "Idioma",
+    "theme": "Tema",
+    "accent": "Color de acento",
+    "group_notifications": "Notificaciones",
+    "popup_corner": "Posición de los recordatorios",
+    "group_behavior": "Comportamiento",
+    "close_to_tray": "Minimizar a la bandeja al cerrar",
+    "autostart": "Ejecutar al iniciar el sistema",
+    "applied_immediately": "Los cambios se aplican inmediatamente",
+    "close": "Cerrar"
+  },
+  "corner": {
+    "top_left": "Arriba a la izquierda",
+    "center_top": "Arriba al centro",
+    "top_right": "Arriba a la derecha",
+    "center_left": "Centro a la izquierda",
+    "center": "Centro",
+    "center_right": "Centro a la derecha",
+    "bottom_left": "Abajo a la izquierda",
+    "center_bottom": "Abajo al centro",
+    "bottom_right": "Abajo a la derecha"
+  },
+  "theme": {
+    "system": "Sistema",
+    "dark": "Oscuro",
+    "light": "Claro"
+  },
+  "accent": {
+    "red": "Rojo",
+    "orange": "Naranja",
+    "amber": "Ámbar",
+    "green": "Verde",
+    "teal": "Verde azulado",
+    "cyan": "Cian",
+    "blue": "Azul",
+    "violet": "Violeta",
+    "pink": "Rosa"
+  },
+  "popup": {
+    "snooze": "Posponer",
+    "snooze_all": "Posponer todo",
+    "close": "Cerrar",
+    "close_all": "Cerrar todo",
+    "missed_title": "Recordatorios perdidos",
+    "snooze_60": "1 hora",
+    "snooze_1440": "1 día"
+  },
+  "tray": {
+    "open": "Abrir",
+    "new": "Nuevo recordatorio",
+    "quit": "Salir"
+  },
+  "msg": {
+    "exported": "Recordatorios exportados: {n}",
+    "imported": "Recordatorios importados: {n}",
+    "export_failed": "Error al exportar: {err}",
+    "import_failed": "Error al importar: {err}",
+    "delete_confirm": "¿Eliminar este recordatorio?",
+    "import_filter_json": "JSON (formato nativo)",
+    "import_filter_wise": "Wise Reminder 1.x",
+    "import_filter_wrm": "Wise Reminder 2.x"
+  }
+}

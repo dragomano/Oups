@@ -1,0 +1,247 @@
+{
+  "version": 1,
+  "exportedAt": "2026-10-11T22:52:12",
+  "reminders": [
+    {
+      "id": "",
+      "title": "Quarterly report",
+      "note": "Drafts are in the shared folder",
+      "priority": "critical",
+      "startAt": "-9h",
+      "recurrence": {
+        "type": "interval",
+        "unit": "hours",
+        "n": 12
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+3h",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Call the tax office",
+      "note": "",
+      "priority": "high",
+      "startAt": "-6d19h",
+      "recurrence": {
+        "type": "weekly",
+        "weekdays": [1]
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+5h",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Back up the 1C database",
+      "note": "",
+      "priority": "critical",
+      "startAt": "-15h",
+      "recurrence": {
+        "type": "interval",
+        "unit": "hours",
+        "n": 24
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+9h",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Reply to Sasha in chat",
+      "note": "",
+      "priority": "normal",
+      "startAt": "+2h",
+      "recurrence": {
+        "type": "once"
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+2h",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Take out the trash",
+      "note": "",
+      "priority": "normal",
+      "startAt": "-13h",
+      "recurrence": {
+        "type": "daily"
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+11h",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Plan next quarter",
+      "note": "",
+      "priority": "high",
+      "startAt": "+3d",
+      "recurrence": {
+        "type": "once"
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+3d",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Refresh the backups",
+      "note": "",
+      "priority": "high",
+      "startAt": "-23d",
+      "recurrence": {
+        "type": "monthly",
+        "days": [18]
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+7d",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Book a dentist appointment",
+      "note": "",
+      "priority": "high",
+      "startAt": "-14d",
+      "recurrence": {
+        "type": "interval",
+        "unit": "days",
+        "n": 30
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+16d",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Run the strategy session",
+      "note": "",
+      "priority": "critical",
+      "startAt": "-363d",
+      "recurrence": {
+        "type": "yearly",
+        "month": 10,
+        "day": 13
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+2d",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Watch the new series",
+      "note": "",
+      "priority": "low",
+      "startAt": "+5d",
+      "recurrence": {
+        "type": "once"
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+5d",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Read about gardening",
+      "note": "",
+      "priority": "low",
+      "startAt": "-5d",
+      "recurrence": {
+        "type": "interval",
+        "unit": "days",
+        "n": 14
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+9d",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    },
+    {
+      "id": "",
+      "title": "Pay the internet bill",
+      "note": "",
+      "priority": "normal",
+      "startAt": "-24d",
+      "recurrence": {
+        "type": "monthly",
+        "days": [17]
+      },
+      "endMode": {
+        "type": "never"
+      },
+      "firedCount": 0,
+      "nextDue": "+6d",
+      "enabled": true,
+      "completed": false,
+      "createdAt": "-30d",
+      "updatedAt": ""
+    }
+  ]
+}

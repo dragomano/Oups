@@ -1,0 +1,51 @@
+[package]
+name = "scheduler"
+version = "0.1.0"
+description = "Portable reminders app"
+authors = ["Bugo"]
+license = "MIT"
+edition = "2024"
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "scheduler_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
+tauri-plugin-single-instance = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-dialog = "2"
+# Rust-only use; no webview opener permission needed.
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.37", features = ["bundled"] }
+# default-features off drops wasm bindings and other unused extras.
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+uuid = { version = "1", features = ["v4"] }
+tokio = { version = "1", features = ["time"] }
+# System UI language detection for the first-run locale autoselect.
+sys-locale = "0.3"
+
+# Windows 11 system material (Mica) behind the main window. The crate is
+# already in the tree through tauri, so this costs no extra build time.
+[target.'cfg(target_os = "windows")'.dependencies]
+window-vibrancy = "0.8"
+
+[dev-dependencies]
+tauri-runtime = "2"
+
+[profile.release]
+codegen-units = 1
+lto = true
+# Optimize for size: the app is I/O bound, binary size matters more than
+# peak CPU throughput. UPX compression is applied in scripts/dist.mjs.
+opt-level = "s"
+panic = "abort"
+strip = true

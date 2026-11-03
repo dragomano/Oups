@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>shots — composite</title>
+    <style>
+      /* One document, two windows: the app fills the canvas and the popup is
+         placed where scheduler::popup_origin puts it — POPUP_MARGIN away from
+         the corner named in the settings (bottom-right by default). Each part is
+         a real entry point in its own iframe, so `100vh` means that window's own
+         height instead of the canvas, which is what the app sees at runtime. */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      iframe {
+        display: block;
+        border: 0;
+      }
+
+      #app-frame {
+        position: absolute;
+        left: 0;
+        top: 0;
+      }
+
+      #popup-frame {
+        position: absolute;
+        display: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+      }
+    </style>
+  </head>
+  <body>
+    <iframe id="app-frame" title="main window"></iframe>
+    <iframe id="popup-frame" title="popup window"></iframe>
+    <script type="module" src="/_shots/shell.ts"></script>
+  </body>
+</html>

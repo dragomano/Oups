@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>shots — main</title>
+    <style>
+      /* The native window has a background; here the card floats over whatever
+         composites it, so the body must not paint one. */
+      html,
+      body {
+        background: transparent;
+      }
+
+      #app {
+        background: var(--panel);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/_shots/popup.ts"></script>
+  </body>
+</html>

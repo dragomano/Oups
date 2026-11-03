@@ -1,0 +1,43 @@
+{
+  "name": "oups",
+  "description": "Portable reminders app",
+  "private": true,
+  "type": "module",
+  "author": "Bugo",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsgo --tsconfig ./tsconfig.json",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check:all": "pnpm lint && pnpm check && pnpm test && cargo fmt --manifest-path src-tauri/Cargo.toml -- --check && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings && cargo test --manifest-path src-tauri/Cargo.toml",
+    "tauri": "tauri",
+    "dist": "tauri build --no-bundle && node scripts/dist.mjs",
+    "demo": "node scripts/demo-data.mjs && biome check --write demo",
+    "tray-icons": "node scripts/tray-icons.mjs",
+    "shots": "node _shots/capture.mjs"
+  },
+  "dependencies": {
+    "@lucide/svelte": "^1.67.0",
+    "@tauri-apps/api": "^2.12.4",
+    "@tauri-apps/plugin-dialog": "^2.8.4"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.4",
+    "@resvg/resvg-js": "^2.6.2",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@tauri-apps/cli": "^2.12.4",
+    "@types/node": "^26.6.6",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "lucide-static": "^1.67.0",
+    "svelte": "^5.57.3",
+    "svelte-check": "^4.7.8",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.5",
+    "vitest": "^5.1.0"
+  }
+}

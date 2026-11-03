@@ -1,0 +1,23 @@
+.DS_Store
+node_modules
+/build
+/dist
+/.svelte-check
+/.svelte-kit
+/.zcode
+/.vscode
+.sharrowkin
+/package
+.env
+.env.*
+!.env.example
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# portable app data (dev runs next to the project)
+/reminders.db
+/reminders.db-wal
+/reminders.db-shm
+
+# locales copied into src-tauri by CI before bundled builds
+src-tauri/locales/

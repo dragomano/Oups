@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>shots — tray menu</title>
+    <style>
+      /* The tray menu is native UI, so it cannot mount a Svelte component.
+         This page rebuilds it in DOM from the REAL sources: menu labels come
+         from locales/*.json through the app's own t(), icons are the exact
+         PNGs embedded into the binary, the name and version come from
+         tauri.conf.json and Cargo.toml. Only the window dressing — the
+         Windows 11 menu chrome and the desktop behind it — is painted here. */
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      body {
+        /* A calm desktop stand-in: the menu needs something behind it to read
+           as a context menu rather than a card. */
+        background:
+          radial-gradient(120% 90% at 20% 10%, #3b5a6b 0%, #24333d 55%, #141b21 100%);
+        font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+      }
+
+      /* The menu opens where the tray icon is: anchored to the bottom-right of
+         the canvas, the same corner the popups appear in. */
+      #menu {
+        position: absolute;
+        right: 24px;
+        bottom: 24px;
+      }
+
+      /* Windows 11 light context menu, at its real metrics: 12px text, 34px
+         rows, 16px icons, 8px radius. */
+      .menu {
+        width: 260px;
+        padding: 5px;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        background: rgba(243, 243, 243, 0.96);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.28);
+        color: #1b1b1b;
+        font-size: 12px;
+        user-select: none;
+      }
+
+      .item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 34px;
+        padding: 0 10px;
+        border-radius: 4px;
+        white-space: nowrap;
+      }
+
+      .item.hover {
+        background: rgba(0, 0, 0, 0.06);
+      }
+
+      .item img {
+        flex: none;
+      }
+
+      .sep {
+        height: 1px;
+        margin: 5px 9px;
+        background: #e0e0e0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="menu"></div>
+    <script type="module" src="/_shots/tray.ts"></script>
+  </body>
+</html>

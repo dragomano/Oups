@@ -1,0 +1,225 @@
+{
+  "meta": {
+    "code": "pl",
+    "name": "Polski",
+    "dir": "ltr",
+    "plural_forms": {
+      "one": 0,
+      "few": 1,
+      "many": 2,
+      "other": 2
+    }
+  },
+  "toolbar": {
+    "new": "Nowe przypomnienie",
+    "search": "Szukaj przypomnień…",
+    "active": "Aktywne",
+    "done": "Zakończone",
+    "matrix": "Macierz",
+    "settings": "Ustawienia",
+    "import": "Import",
+    "export": "Eksport"
+  },
+  "window": {
+    "minimize": "Minimalizuj",
+    "maximize": "Maksymalizuj",
+    "restore": "Przywróć",
+    "close": "Zamknij"
+  },
+  "list": {
+    "empty_title": "Brak przypomnień",
+    "empty_hint": "Kliknij „Nowe przypomnienie”, aby dodać pierwsze",
+    "no_match": "Nic nie znaleziono",
+    "next_run": "Następne uruchomienie",
+    "snoozed": "Odroczone",
+    "completed": "Zakończone",
+    "overdue": "Po terminie",
+    "enable": "Włącz",
+    "disable": "Wyłącz",
+    "disabled": "Wyłączone",
+    "edit": "Edytuj",
+    "delete": "Usuń",
+    "duplicate": "Duplikuj",
+    "copy_suffix": "(kopia)"
+  },
+  "priority": {
+    "low": "Niski",
+    "normal": "Zwykły",
+    "high": "Wysoki",
+    "critical": "Krytyczny",
+    "badge": {
+      "low": "Niski priorytet",
+      "high": "Wysoki priorytet",
+      "critical": "Krytyczny priorytet"
+    },
+    "low_desc": "Zadania tła, łatwe do przełożenia",
+    "normal_desc": "Rutyna i sprawy codzienne",
+    "high_desc": "Wpływa na wynik — warto zaplanować",
+    "critical_desc": "Pilne i ważne — zrób od razu",
+    "important": "ważne",
+    "not_important": "nieważne"
+  },
+  "rec": {
+    "once": "Jednorazowo",
+    "daily": "Codziennie",
+    "weekly": "Dni tygodnia",
+    "monthly": "Co miesiąc",
+    "monthly_on": "Co miesiąc {day}. dnia",
+    "yearly": "Co rok",
+    "yearly_on": "Co rok {date}",
+    "interval": "Interwał",
+    "monthly_on_multi": "Co miesiąc {days}. dnia"
+  },
+  "units": {
+    "minutes": "Minuty",
+    "hours": "Godziny",
+    "days": "Dni",
+    "weeks": "Tygodnie",
+    "months": "Miesiące",
+    "years": "Lata"
+  },
+  "every_one": {
+    "minutes": "Co minutę",
+    "hours": "Co godzinę",
+    "days": "Co dzień",
+    "weeks": "Co tydzień",
+    "months": "Co miesiąc",
+    "years": "Co rok"
+  },
+  "every_many": {
+    "minutes": "minutę|minuty|minut",
+    "hours": "godzina|godziny|godzin",
+    "days": "dzień|dni|dni",
+    "weeks": "tydzień|tygodnie|tygodni",
+    "months": "miesiąc|miesiące|miesięcy",
+    "years": "rok|lata|lat"
+  },
+  "weekdays_short": {
+    "1": "Pn",
+    "2": "Wt",
+    "3": "Śr",
+    "4": "Cz",
+    "5": "Pt",
+    "6": "So",
+    "7": "Nd"
+  },
+  "weekdays_full": {
+    "1": "Poniedziałek",
+    "2": "Wtorek",
+    "3": "Środa",
+    "4": "Czwartek",
+    "5": "Piątek",
+    "6": "Sobota",
+    "7": "Niedziela"
+  },
+  "end": {
+    "never": "Bez końca",
+    "after": "Po",
+    "count_noun": "powtórzeniu|powtórzeniach|powtórzeniach",
+    "until": "Do daty"
+  },
+  "editor": {
+    "new_title": "Nowe przypomnienie",
+    "edit_title": "Edytuj przypomnienie",
+    "title_label": "Tytuł",
+    "title_placeholder": "Na przykład: wynieść śmieci",
+    "note_label": "Notatka",
+    "note_placeholder": "Opcjonalne szczegóły",
+    "date_label": "Data",
+    "time_label": "Godzina",
+    "priority_label": "Priorytet",
+    "recurrence_label": "Powtarzanie",
+    "end_label": "Koniec",
+    "day_of_month": "Dzień miesiąca",
+    "month": "Miesiąc",
+    "day": "Dzień",
+    "every": "Co",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "delete": "Usuń",
+    "error_title": "Podaj tytuł",
+    "error_weekdays": "Wybierz co najmniej jeden dzień tygodnia",
+    "error_date": "Wybierz datę końca",
+    "error_days": "Wybierz co najmniej jeden dzień miesiąca",
+    "hint_past_start": "Ten moment już minął: przypomnienie pojawi się zaraz po zapisaniu",
+    "hint_end_before_start": "Data końca jest wcześniejsza niż początek: nie będzie następnego uruchomienia",
+    "hint_count_used_up": "Wszystkie powtórzenia już się odbyły: nie będzie następnego uruchomienia"
+  },
+  "matrix": {
+    "empty": "Puste",
+    "overdue": "po terminie",
+    "urgency": "pilność",
+    "importance": "ważność",
+    "importance_low": "niska",
+    "importance_high": "wysoka",
+    "do": "Pilne i ważne",
+    "delegate": "Pilne, nieważne",
+    "schedule": "Ważne, niepilne",
+    "drop": "Niepilne, nieważne"
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "group_appearance": "Wygląd",
+    "language": "Język",
+    "theme": "Motyw",
+    "accent": "Kolor akcentu",
+    "group_notifications": "Powiadomienia",
+    "popup_corner": "Położenie przypomnień",
+    "group_behavior": "Zachowanie",
+    "close_to_tray": "Minimalizuj do zasobnika przy zamykaniu",
+    "autostart": "Uruchamiaj przy starcie systemu",
+    "applied_immediately": "Zmiany są stosowane od razu",
+    "close": "Zamknij"
+  },
+  "corner": {
+    "top_left": "Lewy górny",
+    "center_top": "Góra na środku",
+    "top_right": "Prawy górny",
+    "center_left": "Lewy środek",
+    "center": "Środek",
+    "center_right": "Prawy środek",
+    "bottom_left": "Lewy dolny",
+    "center_bottom": "Dół na środku",
+    "bottom_right": "Prawy dolny"
+  },
+  "theme": {
+    "system": "Systemowy",
+    "dark": "Ciemny",
+    "light": "Jasny"
+  },
+  "accent": {
+    "red": "Czerwony",
+    "orange": "Pomarańczowy",
+    "amber": "Bursztynowy",
+    "green": "Zielony",
+    "teal": "Morski",
+    "cyan": "Turkusowy",
+    "blue": "Niebieski",
+    "violet": "Fioletowy",
+    "pink": "Różowy"
+  },
+  "popup": {
+    "snooze": "Odłóż",
+    "snooze_all": "Odłóż wszystko",
+    "close": "Zamknij",
+    "close_all": "Zamknij wszystko",
+    "missed_title": "Pominięte przypomnienia",
+    "snooze_60": "1 godzina",
+    "snooze_1440": "1 dzień"
+  },
+  "tray": {
+    "open": "Otwórz",
+    "new": "Nowe przypomnienie",
+    "quit": "Zakończ"
+  },
+  "msg": {
+    "exported": "Wyeksportowane przypomnienia: {n}",
+    "imported": "Zaimportowane przypomnienia: {n}",
+    "export_failed": "Eksport nie powiódł się: {err}",
+    "import_failed": "Import nie powiódł się: {err}",
+    "delete_confirm": "Usunąć to przypomnienie?",
+    "import_filter_json": "JSON (format własny)",
+    "import_filter_wise": "Wise Reminder 1.x",
+    "import_filter_wrm": "Wise Reminder 2.x"
+  }
+}

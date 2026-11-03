@@ -1,0 +1,227 @@
+{
+  "meta": {
+    "code": "ar",
+    "name": "العربية",
+    "dir": "rtl",
+    "plural_forms": {
+      "zero": 0,
+      "one": 0,
+      "two": 2,
+      "few": 3,
+      "many": 1,
+      "other": 0
+    }
+  },
+  "toolbar": {
+    "new": "تذكير جديد",
+    "search": "ابحث في التذكيرات…",
+    "active": "النشطة",
+    "done": "المكتملة",
+    "matrix": "المصفوفة",
+    "settings": "الإعدادات",
+    "import": "استيراد",
+    "export": "تصدير"
+  },
+  "window": {
+    "minimize": "تصغير",
+    "maximize": "تكبير",
+    "restore": "استعادة",
+    "close": "إغلاق"
+  },
+  "list": {
+    "empty_title": "لا توجد تذكيرات بعد",
+    "empty_hint": "اضغط على «تذكير جديد» لإضافة الأول",
+    "no_match": "لا يوجد شيء",
+    "next_run": "التشغيل التالي",
+    "snoozed": "مؤجَّل",
+    "completed": "مكتمل",
+    "overdue": "متأخر",
+    "enable": "تفعيل",
+    "disable": "تعطيل",
+    "disabled": "معطّل",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "duplicate": "تكرار",
+    "copy_suffix": "(نسخة)"
+  },
+  "priority": {
+    "low": "منخفضة",
+    "normal": "عادية",
+    "high": "عالية",
+    "critical": "حرجة",
+    "badge": {
+      "low": "أولوية منخفضة",
+      "high": "أولوية عالية",
+      "critical": "أولوية حرجة"
+    },
+    "low_desc": "مهام ثانوية يمكن تأجيلها",
+    "normal_desc": "الروتين والأمور اليومية",
+    "high_desc": "تؤثر على النتيجة — يستحسن جدولتها",
+    "critical_desc": "عاجلة ومهمة — نفّذها الآن",
+    "important": "مهم",
+    "not_important": "غير مهم"
+  },
+  "rec": {
+    "once": "مرة واحدة",
+    "daily": "كل يوم",
+    "weekly": "أيام الأسبوع",
+    "monthly": "شهريًا",
+    "monthly_on": "شهريًا في اليوم {day}",
+    "yearly": "سنويًا",
+    "yearly_on": "سنويًا في {date}",
+    "interval": "فاصل زمني",
+    "monthly_on_multi": "شهريًا في الأيام {days}"
+  },
+  "units": {
+    "minutes": "دقائق",
+    "hours": "ساعات",
+    "days": "أيام",
+    "weeks": "أسابيع",
+    "months": "أشهر",
+    "years": "سنوات"
+  },
+  "every_one": {
+    "minutes": "كل دقيقة",
+    "hours": "كل ساعة",
+    "days": "كل يوم",
+    "weeks": "كل أسبوع",
+    "months": "كل شهر",
+    "years": "كل سنة"
+  },
+  "every_many": {
+    "minutes": "دقيقة|دقيقةً|دقيقتين|دقائق",
+    "hours": "ساعة|ساعةً|ساعتين|ساعات",
+    "days": "يوم|يومًا|يومين|أيام",
+    "weeks": "أسبوع|أسبوعًا|أسبوعين|أسابيع",
+    "months": "شهر|شهرًا|شهرين|أشهر",
+    "years": "سنة|سنةً|سنتين|سنوات"
+  },
+  "weekdays_short": {
+    "1": "إث",
+    "2": "ثل",
+    "3": "أر",
+    "4": "خم",
+    "5": "جم",
+    "6": "سب",
+    "7": "أح"
+  },
+  "weekdays_full": {
+    "1": "الاثنين",
+    "2": "الثلاثاء",
+    "3": "الأربعاء",
+    "4": "الخميس",
+    "5": "الجمعة",
+    "6": "السبت",
+    "7": "الأحد"
+  },
+  "end": {
+    "never": "بلا نهاية",
+    "after": "بعد",
+    "count_noun": "تكرار|تكرارًا|تكرارين|تكرارات",
+    "until": "حتى تاريخ"
+  },
+  "editor": {
+    "new_title": "تذكير جديد",
+    "edit_title": "تعديل التذكير",
+    "title_label": "العنوان",
+    "title_placeholder": "مثال: إخراج القمامة",
+    "note_label": "ملاحظة",
+    "note_placeholder": "تفاصيل اختيارية",
+    "date_label": "التاريخ",
+    "time_label": "الوقت",
+    "priority_label": "الأولوية",
+    "recurrence_label": "التكرار",
+    "end_label": "ينتهي",
+    "day_of_month": "يوم الشهر",
+    "month": "الشهر",
+    "day": "اليوم",
+    "every": "كل",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "error_title": "أدخل عنوانًا",
+    "error_weekdays": "اختر يومًا واحدًا على الأقل من أيام الأسبوع",
+    "error_date": "اختر تاريخ الانتهاء",
+    "error_days": "اختر يومًا واحدًا على الأقل من أيام الشهر",
+    "hint_past_start": "هذا الوقت مضى بالفعل: سيظهر التذكير بعد الحفظ مباشرة",
+    "hint_end_before_start": "تاريخ الانتهاء قبل تاريخ البداية: لن يكون هناك تشغيل تالٍ",
+    "hint_count_used_up": "اكتملت كل التكرارات: لن يكون هناك تشغيل تالٍ"
+  },
+  "matrix": {
+    "empty": "فارغ",
+    "overdue": "متأخر",
+    "urgency": "الإلحاح",
+    "importance": "الأهمية",
+    "importance_low": "منخفضة",
+    "importance_high": "عالية",
+    "do": "عاجل ومهم",
+    "delegate": "عاجل وغير مهم",
+    "schedule": "مهم وغير عاجل",
+    "drop": "غير عاجل وغير مهم"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "group_appearance": "المظهر",
+    "language": "اللغة",
+    "theme": "المظهر",
+    "accent": "اللون المميز",
+    "group_notifications": "الإشعارات",
+    "popup_corner": "موضع التذكيرات",
+    "group_behavior": "السلوك",
+    "close_to_tray": "التصغير إلى شريط النظام عند الإغلاق",
+    "autostart": "التشغيل عند بدء النظام",
+    "applied_immediately": "تُطبَّق التغييرات فورًا",
+    "close": "إغلاق"
+  },
+  "corner": {
+    "top_left": "أعلى اليسار",
+    "center_top": "أعلى الوسط",
+    "top_right": "أعلى اليمين",
+    "center_left": "وسط اليسار",
+    "center": "الوسط",
+    "center_right": "وسط اليمين",
+    "bottom_left": "أسفل اليسار",
+    "center_bottom": "أسفل الوسط",
+    "bottom_right": "أسفل اليمين"
+  },
+  "theme": {
+    "system": "النظام",
+    "dark": "داكن",
+    "light": "فاتح"
+  },
+  "accent": {
+    "red": "أحمر",
+    "orange": "برتقالي",
+    "amber": "عنبري",
+    "green": "أخضر",
+    "teal": "أزرق مخضر",
+    "cyan": "سماوي",
+    "blue": "أزرق",
+    "violet": "بنفسجي",
+    "pink": "وردي"
+  },
+  "popup": {
+    "snooze": "تأجيل",
+    "snooze_all": "تأجيل الكل",
+    "close": "إغلاق",
+    "close_all": "إغلاق الكل",
+    "missed_title": "تذكيرات فائتة",
+    "snooze_60": "ساعة واحدة",
+    "snooze_1440": "يوم واحد"
+  },
+  "tray": {
+    "open": "فتح",
+    "new": "تذكير جديد",
+    "quit": "خروج"
+  },
+  "msg": {
+    "exported": "تم تصدير التذكيرات: {n}",
+    "imported": "تم استيراد التذكيرات: {n}",
+    "export_failed": "فشل التصدير: {err}",
+    "import_failed": "فشل الاستيراد: {err}",
+    "delete_confirm": "حذف هذا التذكير؟",
+    "import_filter_json": "JSON (الصيغة الأصلية)",
+    "import_filter_wise": "Wise Reminder 1.x",
+    "import_filter_wrm": "Wise Reminder 2.x"
+  }
+}
