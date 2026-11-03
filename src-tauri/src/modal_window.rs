@@ -87,8 +87,9 @@ pub fn open(app: &AppHandle, label: &str, page: &str, title: &str) -> Result<(),
         .maximizable(false)
         .minimizable(false)
         .skip_taskbar(true)
-        .visible(false)
-        .drag_and_drop(false);
+        .visible(false);
+    #[cfg(target_os = "windows")]
+    let builder = builder.drag_and_drop(false);
     #[cfg(target_os = "windows")]
     let builder = builder.owner(&main).map_err(|e| e.to_string())?;
     #[cfg(not(target_os = "windows"))]
