@@ -91,9 +91,8 @@ fn build_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     }
     let about = about.build(app)?;
     let top = PredefinedMenuItem::separator(app)?;
-    let bottom = PredefinedMenuItem::separator(app)?;
 
-    let mut items: Vec<Box<dyn IsMenuItem<R>>> = Vec::with_capacity(7);
+    let mut items: Vec<Box<dyn IsMenuItem<R>>> = Vec::with_capacity(6);
     items.push(Box::new(about));
     items.push(Box::new(top));
     for (id, icon_bytes) in MENU_ICONS {
@@ -117,7 +116,6 @@ fn build_menu<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         };
         items.push(item);
     }
-    items.push(Box::new(bottom));
     let refs: Vec<&dyn IsMenuItem<R>> = items.iter().map(|item| item.as_ref()).collect();
     Menu::with_items(app, &refs)
 }
