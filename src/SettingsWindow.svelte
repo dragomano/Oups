@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-  import Settings from "../components/Settings.svelte";
-  import { api } from "../lib/api";
-  import { loadLocale } from "../lib/i18n.svelte";
-  import { applyTheme } from "../lib/theme";
+  import Settings from "./components/Settings.svelte";
+  import { api } from "./lib/api";
+  import { loadLocale } from "./lib/i18n.svelte";
+  import { applyTheme } from "./lib/theme";
 
   let ready = $state(false);
   onMount(async () => {

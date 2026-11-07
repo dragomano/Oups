@@ -62,10 +62,14 @@ pub async fn open_settings(app: AppHandle) -> Result<(), String> {
     }
     let language = app.state::<AppState>().settings_lock().language.clone();
     let title = locale::tr(&locale::load_dict(&language), "settings.title");
-    open(&app, "settings", "settings.html", &title)
+    open(&app, "settings", &title)
 }
 
-pub fn open(app: &AppHandle, label: &str, page: &str, title: &str) -> Result<(), String> {
+/// Every window loads the same page; the frontend picks the component from the
+/// window label (see src/lib/window-role.ts).
+const PAGE: &str = "index.html";
+
+pub fn open(app: &AppHandle, label: &str, title: &str) -> Result<(), String> {
     let main = app
         .get_webview_window("main")
         .ok_or("main window missing")?;
@@ -78,7 +82,7 @@ pub fn open(app: &AppHandle, label: &str, page: &str, title: &str) -> Result<(),
     let scale = monitor.scale_factor();
     let width = 820.0_f64.min((area.size.width as f64 / scale - 32.0).max(1.0));
     let height = 600.0_f64.min((area.size.height as f64 / scale - 48.0).max(1.0));
-    let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App(page.into()))
+    let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App(PAGE.into()))
         .title(title)
         .decorations(false)
         .inner_size(width, height)

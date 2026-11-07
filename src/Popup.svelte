@@ -1,12 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-  import { api, type PopupData, type Reminder } from "../lib/api";
-  import { loadLocale, t } from "../lib/i18n.svelte";
-  import { applyTheme } from "../lib/theme";
+  import { api, type PopupData, type Reminder } from "./lib/api";
+  import { loadLocale, t } from "./lib/i18n.svelte";
+  import { applyTheme } from "./lib/theme";
   import X from "@lucide/svelte/icons/x";
-  import { fmtDateTime, fmtTime, parseLocal, recurrenceText, snoozePresetLabel } from "../lib/time";
-  import NoteLinks from "../components/NoteLinks.svelte";
+  import { fmtDateTime, fmtTime, parseLocal, recurrenceText, snoozePresetLabel } from "./lib/time";
+  import NoteLinks from "./components/NoteLinks.svelte";
 
   let data = $state<PopupData | null>(null);
   let list = $state<Reminder[]>([]);

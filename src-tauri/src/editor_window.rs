@@ -50,7 +50,7 @@ pub async fn open_editor(
         .lock()
         .unwrap_or_else(|p| p.into_inner()) = reminder;
 
-    modal_window::open(&app, LABEL, "editor.html", &locale::tr(&dict, key))
+    modal_window::open(&app, LABEL, &locale::tr(&dict, key))
 }
 
 #[tauri::command]

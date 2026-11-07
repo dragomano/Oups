@@ -28,13 +28,7 @@ export default defineConfig(async () => ({
     // Frontend output lives in build/ — dist/ is reserved for the portable
     // staging folder (dist/Oups), so the two never wipe each other.
     outDir: "build",
-    rollupOptions: {
-      input: {
-        main: "index.html",
-        popup: "popup.html",
-        editor: "editor.html",
-        settings: "settings.html",
-      },
-    },
+    // index.html is the single entry; per-role chunks come from the dynamic
+    // imports in src/main.ts.
   },
 }));

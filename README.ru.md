@@ -136,9 +136,9 @@ PATH. Версия приложения живёт только в `src-tauri/Ca
 ```
 src/                фронтенд (Svelte 5)
   App.svelte            главное окно (тулбар, список, матрица, диалоги)
-  editor/EditorWindow.svelte     отдельное окно редактора напоминания
-  settings/SettingsWindow.svelte отдельное окно настроек
-  popup/Popup.svelte    окно напоминания + окно «пропущенных»
+  EditorWindow.svelte   отдельное окно редактора напоминания
+  SettingsWindow.svelte отдельное окно настроек
+  Popup.svelte          окно напоминания + окно «пропущенных»
   components/           Toolbar, TitleBar, ReminderList, ReminderRow, ReminderEditor,
                         RecurrencePicker, PriorityPicker, MonthDayPicker, NoteLinks,
                         EisenhowerMatrix, Settings, WindowControls

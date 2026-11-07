@@ -1,7 +1,7 @@
 import "./no-motion";
 import { mount } from "svelte";
 import "../src/app.css";
-import SettingsWindow from "../src/settings/SettingsWindow.svelte";
+import SettingsWindow from "../src/SettingsWindow.svelte";
 import { readParams } from "./runtime";
 import { paint, ready, waitFor } from "./wait";
 

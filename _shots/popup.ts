@@ -6,7 +6,7 @@ import "./freeze-clock";
 import "./no-motion";
 import { mount } from "svelte";
 import "../src/app.css";
-import Popup from "../src/popup/Popup.svelte";
+import Popup from "../src/Popup.svelte";
 import { readParams } from "./runtime";
 import { paint, ready, waitFor } from "./wait";
 

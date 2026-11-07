@@ -138,8 +138,9 @@ fn build_popup_window(app: &AppHandle, label: &str, title: &str) {
         .count();
     let (x, y) = popup_origin(app, &position, open_count);
     // Hidden from creation: the popup reveals itself via `popup_window_ready`
-    // once its interface is rendered, so no blank WebView frame flashes.
-    let mut builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App("popup.html".into()))
+    // once its interface is rendered, so no blank WebView frame flashes. The
+    // page is shared with every window; the label selects the component.
+    let mut builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
         .title(title)
         .inner_size(440.0, 310.0)
         .min_inner_size(340.0, 220.0)

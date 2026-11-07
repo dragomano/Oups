@@ -137,9 +137,9 @@ only in `tauri.conf.json` (`productName`).
 ```
 src/                Svelte frontend
   App.svelte            main window (toolbar, list, matrix, dialogs)
-  editor/EditorWindow.svelte     standalone reminder editor
-  settings/SettingsWindow.svelte standalone settings modal
-  popup/Popup.svelte    reminder popup + missed-reminders window
+  EditorWindow.svelte   standalone reminder editor
+  SettingsWindow.svelte standalone settings modal
+  Popup.svelte          reminder popup + missed-reminders window
   components/           Toolbar, TitleBar, ReminderList, ReminderRow, ReminderEditor,
                         RecurrencePicker, PriorityPicker, MonthDayPicker, NoteLinks,
                         EisenhowerMatrix, Settings, WindowControls

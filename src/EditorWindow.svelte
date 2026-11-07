@@ -2,10 +2,10 @@
   import { onMount } from "svelte";
   import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
   import { listen } from "@tauri-apps/api/event";
-  import ReminderEditor from "../components/ReminderEditor.svelte";
-  import { api, type Reminder } from "../lib/api";
-  import { loadLocale } from "../lib/i18n.svelte";
-  import { applyTheme } from "../lib/theme";
+  import ReminderEditor from "./components/ReminderEditor.svelte";
+  import { api, type Reminder } from "./lib/api";
+  import { loadLocale } from "./lib/i18n.svelte";
+  import { applyTheme } from "./lib/theme";
 
   let ready = $state(false);
   let reminder = $state<Reminder | null>(null);

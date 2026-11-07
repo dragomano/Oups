@@ -47,7 +47,8 @@ pub fn main_window_ready(app: AppHandle) -> Result<(), String> {
 }
 
 /// The popup interface reports ready: reveal the calling window. Both the
-/// per-reminder popups and the `missed` list use this (same popup.html).
+/// per-reminder popups and the `missed` list use this (same page as every
+/// window).
 #[tauri::command]
 pub fn popup_window_ready(window: WebviewWindow) -> Result<(), String> {
     if window.label() != MISSED_LABEL && !window.label().starts_with("reminder-") {
