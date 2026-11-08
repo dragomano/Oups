@@ -3,7 +3,8 @@ import { join } from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 import { i18n, t } from "./i18n.svelte";
 import { PLURAL_CATEGORIES, pluralCategory, pluralSlot } from "./plural";
-import { declinedWord, everyPrefix, formatUnit, recurrenceText, snoozePresetLabel } from "./time";
+import { SNOOZE_UNITS } from "./snooze";
+import { declinedWord, everyPrefix, formatUnit, recurrenceText } from "./time";
 
 /**
  * Plural handling is a per-language table, not per-language code: a locale file
@@ -295,30 +296,6 @@ describe("custom snooze minute label", () => {
   });
 });
 
-/** The snooze menu: minute presets are computed, hour and day are keys. */
-describe("snooze preset labels", () => {
-  it("builds minute presets from the shared noun", () => {
-    useLocale("ru");
-    expect(snoozePresetLabel(5)).toBe("5 минут");
-    expect(snoozePresetLabel(30)).toBe("30 минут");
-    useLocale("uk");
-    expect(snoozePresetLabel(5)).toBe("5 хвилин");
-    useLocale("en");
-    expect(snoozePresetLabel(5)).toBe("5 minutes");
-    useLocale("ar");
-    expect(snoozePresetLabel(15)).toBe("15 دقيقةً");
-  });
-
-  it("keeps hour and day as their own keys", () => {
-    useLocale("ru");
-    expect(snoozePresetLabel(60)).toBe("1 час");
-    expect(snoozePresetLabel(1440)).toBe("1 сутки");
-    useLocale("uk");
-    expect(snoozePresetLabel(60)).toBe("1 година");
-    expect(snoozePresetLabel(1440)).toBe("1 доба");
-  });
-});
-
 /** The noun the editor writes after the count; `end.after` sets its case. */
 describe("declined count noun across shipped languages", () => {
   beforeEach(() => {
@@ -425,6 +402,13 @@ describe("shipped locale files", () => {
           (unit) => [unit, String((dict.every_many as Dict)[unit]).split("|")] as [string, string[]],
         ),
         ["end.count_noun", String(at(dict, "end.count_noun")).split("|")],
+        ...SNOOZE_UNITS.map(
+          (unit) =>
+            [`popup.snooze_units.${unit}`, String(at(dict, `popup.snooze_units.${unit}`)).split("|")] as [
+              string,
+              string[],
+            ],
+        ),
       ];
 
       for (const [label, forms] of lists) {

@@ -11,6 +11,7 @@ use crate::model::{Reminder, fmt_dt, now_local};
 use crate::relative;
 use crate::scheduler::{MISSED_LABEL, emit_changed, initial_next_due, popup_label};
 use crate::settings::{self, Settings};
+use crate::snooze::{self, SnoozeUnit};
 use crate::startup;
 use crate::state::AppState;
 use crate::tray;
@@ -206,13 +207,12 @@ pub fn set_reminder_completed(
     Ok(reminder)
 }
 
-/// Postpone a reminder by `minutes` from now: rewrite next_due and close its
+/// Postpone a reminder to a validated timestamp: rewrite next_due and close its
 /// popup. Works both for a live popup and for an entry in the missed list.
-fn snooze_inner(state: &AppState, app: &AppHandle, id: &str, minutes: i64) -> Result<(), String> {
-    let next = fmt_dt(now_local() + chrono::Duration::minutes(minutes));
+fn snooze_inner(state: &AppState, app: &AppHandle, id: &str, next: &str) -> Result<(), String> {
     {
         let conn = state.db_lock();
-        db::set_next_due(&conn, id, Some(next))?;
+        db::set_next_due(&conn, id, Some(next.to_owned()))?;
         db::set_enabled(&conn, id, true)?;
         db::set_completed(&conn, id, false)?;
     }
@@ -227,9 +227,11 @@ pub fn snooze_reminder(
     state: State<'_, AppState>,
     app: AppHandle,
     id: String,
-    minutes: i64,
+    count: u32,
+    unit: SnoozeUnit,
 ) -> Result<(), String> {
-    snooze_inner(&state, &app, &id, minutes)?;
+    let next = fmt_dt(snooze::due_at(now_local(), count, unit)?);
+    snooze_inner(&state, &app, &id, &next)?;
     emit_changed(&app);
     Ok(())
 }
@@ -238,11 +240,13 @@ pub fn snooze_reminder(
 pub fn snooze_missed_all(
     state: State<'_, AppState>,
     app: AppHandle,
-    minutes: i64,
+    count: u32,
+    unit: SnoozeUnit,
 ) -> Result<(), String> {
+    let next = fmt_dt(snooze::due_at(now_local(), count, unit)?);
     let ids: Vec<String> = state.missed_lock().iter().map(|r| r.id.clone()).collect();
     for id in &ids {
-        snooze_inner(&state, &app, id, minutes)?;
+        snooze_inner(&state, &app, id, &next)?;
     }
     state.missed_lock().clear();
     if let Some(win) = app.get_webview_window(MISSED_LABEL) {

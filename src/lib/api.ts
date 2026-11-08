@@ -4,6 +4,7 @@ export type Priority = "low" | "normal" | "high" | "critical";
 /** Main-window view tabs. */
 export type View = "active" | "done" | "matrix";
 export type IntervalUnit = "minutes" | "hours" | "days" | "weeks" | "months" | "years";
+export type SnoozeUnit = Exclude<IntervalUnit, "years">;
 
 export type Recurrence =
   | { type: "once" }
@@ -74,8 +75,9 @@ export const api = {
   setEnabled: (id: string, enabled: boolean) => invoke<Reminder>("set_reminder_enabled", { id, enabled }),
   setCompleted: (id: string, completed: boolean) =>
     invoke<Reminder>("set_reminder_completed", { id, completed }),
-  snooze: (id: string, minutes: number) => invoke<void>("snooze_reminder", { id, minutes }),
-  snoozeMissedAll: (minutes: number) => invoke<void>("snooze_missed_all", { minutes }),
+  snooze: (id: string, count: number, unit: SnoozeUnit) =>
+    invoke<void>("snooze_reminder", { id, count, unit }),
+  snoozeMissedAll: (count: number, unit: SnoozeUnit) => invoke<void>("snooze_missed_all", { count, unit }),
   getPopupData: () => invoke<PopupData>("get_popup_data"),
   dismissMissed: () => invoke<void>("dismiss_missed"),
   dismissMissedOne: (id: string) => invoke<void>("dismiss_missed_one", { id }),

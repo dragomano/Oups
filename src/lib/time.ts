@@ -71,18 +71,6 @@ export function formatUnit(unit: IntervalUnit, n: number): string {
 }
 
 /**
- * The label for a snooze preset. Minute counts reuse the shared declined noun
- * ("5 минут", "5 хвилин"). An hour and a day keep their own keys: "1 сутки" is
- * not the recurrence word "день".
- */
-export function snoozePresetLabel(minutes: number): string {
-  if (minutes === 60) return t("popup.snooze_60");
-  if (minutes === 1440) return t("popup.snooze_1440");
-
-  return `${minutes} ${formatUnit("minutes", minutes)}`;
-}
-
-/**
  * The word matching "Every" for n and unit: "Каждый 21 час", "Каждую 21 минуту",
  * "Каждые 5 минут", "Alle 5 Minuten", "Co 5 minut". Only a language whose word
  * agrees with the noun's gender declares `meta.unit_genders` and supplies

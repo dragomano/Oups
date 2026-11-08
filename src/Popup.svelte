@@ -1,20 +1,20 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-  import { api, type PopupData, type Reminder } from "./lib/api";
+  import { api, type PopupData, type Reminder, type SnoozeUnit } from "./lib/api";
   import { loadLocale, t } from "./lib/i18n.svelte";
   import { applyTheme } from "./lib/theme";
   import X from "@lucide/svelte/icons/x";
-  import { fmtDateTime, fmtTime, parseLocal, recurrenceText, snoozePresetLabel } from "./lib/time";
+  import { fmtDateTime, fmtTime, parseLocal, recurrenceText } from "./lib/time";
+  import { isValidSnoozeCount, SNOOZE_DEFAULT, SNOOZE_MAX, SNOOZE_MIN, SNOOZE_UNITS, snoozeUnitLabel } from "./lib/snooze";
   import NoteLinks from "./components/NoteLinks.svelte";
 
   let data = $state<PopupData | null>(null);
   let list = $state<Reminder[]>([]);
 
-  /** The chosen snooze preset, in minutes. */
-  let choice = $state("10");
-
-  const PRESETS = [5, 10, 15, 30, 60, 1440];
+  let delayCount = $state<number | undefined>(SNOOZE_DEFAULT);
+  let delayUnit = $state<SnoozeUnit>("minutes");
+  const validDelay = $derived(isValidSnoozeCount(delayCount));
 
   onMount(async () => {
     const s = await api.getSettings();
@@ -34,17 +34,14 @@
     getCurrentWebviewWindow().close();
   }
 
-  async function snooze(minutes: number) {
-    if (data?.kind === "single") await api.snooze(data.reminder.id, minutes);
-    else if (data?.kind === "missed") await api.snoozeMissedAll(minutes);
+  async function applyChoice() {
+    if (!isValidSnoozeCount(delayCount)) return;
+
+    if (data?.kind === "single") await api.snooze(data.reminder.id, delayCount, delayUnit);
+    else if (data?.kind === "missed") await api.snoozeMissedAll(delayCount, delayUnit);
     else return;
 
     closeSelf();
-  }
-
-  /** Snooze for the chosen preset; the select only ever holds preset values. */
-  function applyChoice() {
-    snooze(Number(choice));
   }
 
   async function dismissOne(id: string) {
@@ -77,22 +74,33 @@
 
 <svelte:window onkeydown={onKeydown} />
 
-<!--
-  One row for the delay, one for leaving. The presets live in a native select
-  rather than a stacked menu: a popup is 310px tall and six menu items do not
-  fit it, so the menu could only be reached by resizing the window first. The
-  select costs the layout nothing until it is opened.
--->
+<!-- Keep the delay controls compact; the native unit menu opens outside the layout. -->
 {#snippet delayControls(applyLabel: string, closeLabel: string, onClose: () => void)}
   <div class="actions">
-    <div class="delay-row">
-      <select bind:value={choice} aria-label={applyLabel}>
-        {#each PRESETS as m (m)}
-          <option value={String(m)}>{snoozePresetLabel(m)}</option>
-        {/each}
-      </select>
-      <button class="primary" onclick={applyChoice} aria-label={applyLabel}>{applyLabel}</button>
-    </div>
+    <form class="delay-form" onsubmit={(event) => { event.preventDefault(); void applyChoice(); }}>
+      <div class="delay-row">
+        <input
+          type="number"
+          min={SNOOZE_MIN}
+          max={SNOOZE_MAX}
+          step="1"
+          required
+          bind:value={delayCount}
+          aria-label={t("popup.snooze_count")}
+          aria-invalid={!validDelay}
+          aria-describedby={!validDelay ? "snooze-error" : undefined}
+        />
+        <select bind:value={delayUnit} aria-label={t("popup.snooze_unit")}>
+          {#each SNOOZE_UNITS as unit (unit)}
+            <option value={unit}>{snoozeUnitLabel(unit, delayCount)}</option>
+          {/each}
+        </select>
+        <button type="submit" class="primary" disabled={!validDelay} aria-label={applyLabel}>{applyLabel}</button>
+      </div>
+      {#if !validDelay}
+        <p class="delay-error" id="snooze-error" role="alert">{t("popup.snooze_range", { min: SNOOZE_MIN, max: SNOOZE_MAX })}</p>
+      {/if}
+    </form>
     <button onclick={onClose} aria-label={closeLabel}>{closeLabel}</button>
   </div>
 {/snippet}
@@ -206,7 +214,13 @@
     padding: 10px 12px;
   }
 
-  /* The picker takes the slack; the two buttons keep their own width. */
+  .delay-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* The unit picker takes the slack; the count and action keep their width. */
   .delay-row {
     display: flex;
     align-items: center;
@@ -221,6 +235,29 @@
 
   .delay-row button {
     flex: none;
+  }
+
+  .delay-row input {
+    flex: none;
+    width: 6em;
+    padding: 9px 10px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .delay-error {
+    margin: 0;
+    color: var(--danger);
+    font-size: 13px;
+  }
+
+  @media (max-width: 380px) {
+    .delay-row {
+      flex-wrap: wrap;
+    }
+
+    .delay-row button {
+      width: 100%;
+    }
   }
 
   .missed-list {

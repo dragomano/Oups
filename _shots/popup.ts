@@ -8,6 +8,7 @@ import { mount } from "svelte";
 import "../src/app.css";
 import Popup from "../src/Popup.svelte";
 import { readParams } from "./runtime";
+import { verifySnoozeControls } from "./snooze";
 import { paint, ready, waitFor } from "./wait";
 
 readParams();
@@ -16,6 +17,7 @@ mount(Popup, { target: document.getElementById("app") as HTMLElement });
 
 async function run() {
   await waitFor(".wrap:not(.muted)", "the popup");
+  await verifySnoozeControls();
   await paint();
   ready();
 }

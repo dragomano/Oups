@@ -202,8 +202,16 @@
     "close": "Cerrar",
     "close_all": "Cerrar todo",
     "missed_title": "Recordatorios perdidos",
-    "snooze_60": "1 hora",
-    "snooze_1440": "1 día"
+    "snooze_count": "Duración del aplazamiento",
+    "snooze_unit": "Unidad de tiempo",
+    "snooze_range": "Introduce un número entero entre {min} y {max}.",
+    "snooze_units": {
+      "minutes": "minuto|minutos",
+      "hours": "hora|horas",
+      "days": "día|días",
+      "weeks": "semana|semanas",
+      "months": "mes|meses"
+    }
   },
   "tray": {
     "open": "Abrir",

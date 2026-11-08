@@ -204,8 +204,16 @@
     "close": "Zamknij",
     "close_all": "Zamknij wszystko",
     "missed_title": "Pominięte przypomnienia",
-    "snooze_60": "1 godzina",
-    "snooze_1440": "1 dzień"
+    "snooze_count": "Czas odłożenia",
+    "snooze_unit": "Jednostka czasu",
+    "snooze_range": "Wpisz liczbę całkowitą od {min} do {max}.",
+    "snooze_units": {
+      "minutes": "minuta|minuty|minut",
+      "hours": "godzina|godziny|godzin",
+      "days": "dzień|dni|dni",
+      "weeks": "tydzień|tygodnie|tygodni",
+      "months": "miesiąc|miesiące|miesięcy"
+    }
   },
   "tray": {
     "open": "Otwórz",

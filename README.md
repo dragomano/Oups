@@ -18,9 +18,9 @@ packages. Built with Tauri 2 + Svelte 5.
   to the month length), yearly (Feb 29 → Feb 28), or every N minutes / hours /
   days / weeks / months / years.
 - End conditions: forever, after N occurrences, or until a date (inclusive).
-- Popup at due time, always on top, with snooze presets (5/10/15/30/60 min
-  and 1 day) or close. A reminder never opens a second popup while one is
-  already on screen.
+- Popup at due time, always on top, with a custom snooze interval of 1–9999
+  minutes / hours / days / weeks / calendar months (5 minutes by default), or
+  close. A reminder never opens a second popup while one is already on screen.
 - Popups appear in a configurable screen position (corners, edge centers,
   center) and stack like a card deck
   (each next popup shifts aside instead of covering the previous one).

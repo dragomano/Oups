@@ -202,8 +202,16 @@
     "close": "Schließen",
     "close_all": "Alle schließen",
     "missed_title": "Verpasste Erinnerungen",
-    "snooze_60": "1 Stunde",
-    "snooze_1440": "1 Tag"
+    "snooze_count": "Aufschubdauer",
+    "snooze_unit": "Zeiteinheit",
+    "snooze_range": "Geben Sie eine ganze Zahl von {min} bis {max} ein.",
+    "snooze_units": {
+      "minutes": "Minute|Minuten",
+      "hours": "Stunde|Stunden",
+      "days": "Tag|Tage",
+      "weeks": "Woche|Wochen",
+      "months": "Monat|Monate"
+    }
   },
   "tray": {
     "open": "Öffnen",

@@ -204,8 +204,16 @@
     "close": "Close",
     "close_all": "Close all",
     "missed_title": "Missed reminders",
-    "snooze_60": "1 hour",
-    "snooze_1440": "1 day"
+    "snooze_count": "Snooze duration",
+    "snooze_unit": "Time unit",
+    "snooze_range": "Enter a whole number from {min} to {max}.",
+    "snooze_units": {
+      "minutes": "minute|minutes",
+      "hours": "hour|hours",
+      "days": "day|days",
+      "weeks": "week|weeks",
+      "months": "month|months"
+    }
   },
   "tray": {
     "open": "Open",

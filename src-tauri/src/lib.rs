@@ -11,6 +11,7 @@ mod recurrence;
 mod relative;
 mod scheduler;
 mod settings;
+mod snooze;
 mod sound;
 mod startup;
 mod state;
