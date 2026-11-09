@@ -3,6 +3,21 @@
   "bundle": {
     "active": true,
     "targets": ["deb", "appimage"],
-    "resources": ["locales/"]
+    "resources": ["locales/"],
+    "linux": {
+      "deb": {
+        "section": "utils",
+        "files": {
+          "/usr/share/metainfo/com.toster.oups.metainfo.xml": "gen/bundle/com.toster.oups.metainfo.xml",
+          "/usr/share/doc/oups/copyright": "../LICENSE"
+        }
+      },
+      "appimage": {
+        "files": {
+          "/usr/share/metainfo/com.toster.oups.metainfo.xml": "gen/bundle/com.toster.oups.metainfo.xml",
+          "/usr/share/doc/oups/copyright": "../LICENSE"
+        }
+      }
+    }
   }
 }

@@ -8,6 +8,13 @@
       "other": 1
     }
   },
+  "distribution": {
+    "summary": "Reminders with recurring schedules, snooze and priorities",
+    "description": "Create reminders with popup notifications, flexible recurrence, snooze and four priority levels. Organize reminders in a list or an Eisenhower matrix, import Wise Reminder data and keep everything locally.",
+    "list": "Reminder list",
+    "matrix": "Eisenhower matrix",
+    "editor": "Reminder editor"
+  },
   "toolbar": {
     "new": "New reminder",
     "search": "Search reminders…",

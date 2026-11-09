@@ -8,6 +8,13 @@
       "other": 1
     }
   },
+  "distribution": {
+    "summary": "Recordatorios con repeticiones, aplazamiento y prioridades",
+    "description": "Cree recordatorios con notificaciones emergentes, repeticiones flexibles, aplazamiento y cuatro niveles de prioridad. Organícelos en una lista o en una matriz de Eisenhower, importe datos de Wise Reminder y guarde todo localmente.",
+    "list": "Lista de recordatorios",
+    "matrix": "Matriz de Eisenhower",
+    "editor": "Editor de recordatorios"
+  },
   "toolbar": {
     "new": "Nuevo recordatorio",
     "search": "Buscar recordatorios…",

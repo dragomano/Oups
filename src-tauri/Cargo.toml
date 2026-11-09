@@ -1,7 +1,9 @@
 [package]
 name = "scheduler"
 version = "0.1.0"
-description = "Portable reminders app"
+description = "Reminders with recurring schedules, snooze and priorities"
+homepage = "https://github.com/dragomano/Oups"
+repository = "https://github.com/dragomano/Oups"
 authors = ["Bugo"]
 license = "MIT"
 edition = "2024"

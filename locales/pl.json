@@ -10,6 +10,13 @@
       "other": 2
     }
   },
+  "distribution": {
+    "summary": "Przypomnienia z powtarzaniem, odkładaniem i priorytetami",
+    "description": "Twórz przypomnienia z wyskakującymi powiadomieniami, elastycznym powtarzaniem, odkładaniem i czterema poziomami priorytetu. Porządkuj je na liście lub w macierzy Eisenhowera, importuj dane z Wise Reminder i przechowuj wszystko lokalnie.",
+    "list": "Lista przypomnień",
+    "matrix": "Macierz Eisenhowera",
+    "editor": "Edytor przypomnienia"
+  },
   "toolbar": {
     "new": "Nowe przypomnienie",
     "search": "Szukaj przypomnień…",

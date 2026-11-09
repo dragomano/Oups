@@ -3,6 +3,13 @@
   "bundle": {
     "active": true,
     "targets": ["app", "dmg"],
-    "resources": ["locales/"]
+    "resources": ["locales/"],
+    "icon": ["icons/icon.icns", "icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png"],
+    "macOS": {
+      "infoPlist": "gen/bundle/Info.plist",
+      "files": {
+        "Resources": "gen/bundle/macos"
+      }
+    }
   }
 }

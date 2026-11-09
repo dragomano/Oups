@@ -1,13 +1,14 @@
 {
   "name": "oups",
-  "description": "Portable reminders app",
+  "description": "Reminders with recurring schedules, snooze and priorities",
   "private": true,
   "type": "module",
   "author": "Bugo",
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "pnpm bundle:metadata && vite build",
+    "bundle:metadata": "node scripts/bundle-metadata.mjs",
     "preview": "vite preview",
     "check": "svelte-check --tsgo --tsconfig ./tsconfig.json",
     "lint": "biome check .",

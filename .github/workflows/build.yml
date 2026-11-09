@@ -112,6 +112,20 @@ jobs:
       - name: Build macOS app and dmg
         run: pnpm tauri build --target ${{ matrix.target }}
 
+      - name: Check macOS bundle metadata
+        run: |
+          app="src-tauri/target/${{ matrix.target }}/release/bundle/macos/Oups.app"
+          plist="$app/Contents/Info.plist"
+          plutil -lint "$plist"
+          test "$(plutil -extract LSApplicationCategoryType raw -o - "$plist")" = "public.app-category.productivity"
+          test "$(plutil -extract NSHumanReadableCopyright raw -o - "$plist")" = "Copyright (c) 2026 Bugo. MIT license."
+          icon=$(plutil -extract CFBundleIconFile raw -o - "$plist")
+          test -s "$app/Contents/Resources/$icon"
+          test -s "$app/Contents/Resources/Credits.html"
+          test -s "$app/Contents/Resources/ru.lproj/Credits.html"
+          test -s "$app/Contents/Resources/screenshots/01-list.en.png"
+          test -s "$app/Contents/Resources/LICENSE.txt"
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
@@ -157,7 +171,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y
           libwebkit2gtk-4.1-dev build-essential curl wget file
           libxdo-dev libssl-dev libayatana-appindicator3-dev
-          librsvg2-dev libfuse2
+          librsvg2-dev libfuse2 appstream
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
@@ -167,6 +181,19 @@ jobs:
 
       - name: Build Linux packages (deb + AppImage)
         run: pnpm tauri build
+
+      - name: Check Linux bundle metadata
+        run: |
+          deb=$(find src-tauri/target/release/bundle/deb -maxdepth 1 -name '*.deb' -print -quit)
+          extracted="$RUNNER_TEMP/oups-deb"
+          dpkg-deb --extract "$deb" "$extracted"
+          appstreamcli validate --no-net "$extracted/usr/share/metainfo/com.toster.oups.metainfo.xml"
+          test -s "$extracted/usr/share/applications/Oups.desktop"
+          test -s "$extracted/usr/share/icons/hicolor/128x128/apps/scheduler.png"
+          test -s "$extracted/usr/share/doc/oups/copyright"
+          appdir="src-tauri/target/release/bundle/appimage/Oups.AppDir"
+          appstreamcli validate --no-net "$appdir/usr/share/metainfo/com.toster.oups.metainfo.xml"
+          test -s "$appdir/usr/share/doc/oups/copyright"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v7

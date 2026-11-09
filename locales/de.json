@@ -8,6 +8,13 @@
       "other": 1
     }
   },
+  "distribution": {
+    "summary": "Erinnerungen mit Wiederholungen, Schlummerfunktion und Prioritäten",
+    "description": "Erstellen Sie Erinnerungen mit Popup-Benachrichtigungen, flexiblen Wiederholungen, Schlummerfunktion und vier Prioritätsstufen. Organisieren Sie Erinnerungen als Liste oder in einer Eisenhower-Matrix, importieren Sie Daten aus Wise Reminder und speichern Sie alles lokal.",
+    "list": "Erinnerungsliste",
+    "matrix": "Eisenhower-Matrix",
+    "editor": "Erinnerung bearbeiten"
+  },
   "toolbar": {
     "new": "Neue Erinnerung",
     "search": "Erinnerungen suchen…",

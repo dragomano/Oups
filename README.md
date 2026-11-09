@@ -121,6 +121,23 @@ pnpm shots            # regenerate the screenshots in screenshots/
 (.deb/AppImage) packages are built by the release workflow in
 `.github/workflows/build.yml`, which bundles `locales/` into the app resources.
 
+`pnpm build` also runs `pnpm bundle:metadata`. It generates Linux AppStream
+metadata and localized macOS `Credits.html` files in `src-tauri/gen/bundle/`.
+The name comes from `tauri.conf.json`, the version, author and license from
+`Cargo.toml`, and the descriptions and screenshot captions from
+`distribution.*` in `locales/*.json`. Package descriptions in the Tauri config
+match the English locale. Release dates use `SOURCE_DATE_EPOCH` when set,
+otherwise the latest Git commit date, so rebuilding a revision is reproducible.
+
+Both Linux packages carry AppStream metadata, the license and a stock icon;
+AppStream links to the existing English and Russian screenshots on GitHub.
+Opening a local `.deb` before installation can still show a limited card in
+Ubuntu App Center; a full pre-install listing needs repository AppStream data.
+macOS uses its native `.icns` icon, category and copyright in `Info.plist`,
+plus localized credits with an offline screenshot gallery and the MIT license
+inside `Contents/Resources`. These bundle files do not publish a Mac App Store
+listing. The release workflow validates the metadata in the built packages.
+
 Rust tests (recurrence engine, scheduler decisions, locale fallback):
 
 ```bash
