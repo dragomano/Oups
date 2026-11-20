@@ -82,6 +82,8 @@
         recurrence: rec,
         endMode,
         firedCount: src?.firedCount ?? 0,
+        // next_due belongs to the backend: an unchanged schedule keeps its
+        // stored occurrence, which is how a snooze survives an edit.
         nextDue: null,
         enabled: src ? src.enabled : true,
         completed: src ? src.completed : false,

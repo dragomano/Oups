@@ -76,6 +76,32 @@ pub(crate) fn initial_next_due_at(r: &Reminder, now: NaiveDateTime) -> Option<St
     next.map(fmt_dt)
 }
 
+/// What a save stores for `next_due`. The editor re-sends the whole reminder,
+/// and a snooze only ever rewrites `next_due` — so recomputing from the grid
+/// here would silently drop it. While every schedule field comes back
+/// identical the stored occurrence wins; a real schedule edit recomputes.
+pub fn next_due_on_save(
+    incoming: &Reminder,
+    stored: Option<&Reminder>,
+    now: NaiveDateTime,
+) -> Option<String> {
+    match stored {
+        Some(stored) if schedule_unchanged(incoming, stored) => stored.next_due.clone(),
+        _ => initial_next_due_at(incoming, now),
+    }
+}
+
+/// The fields that define the occurrence grid. `fired_count` and `next_due`
+/// are deliberately absent: fires and snoozes move them on their own, and the
+/// editor never edits either.
+fn schedule_unchanged(incoming: &Reminder, stored: &Reminder) -> bool {
+    incoming.start_at == stored.start_at
+        && incoming.recurrence == stored.recurrence
+        && incoming.end_mode == stored.end_mode
+        && incoming.enabled == stored.enabled
+        && incoming.completed == stored.completed
+}
+
 pub fn emit_changed(app: &AppHandle) {
     let _ = app.emit("reminders-changed", ());
 }
@@ -476,5 +502,80 @@ mod tests {
         let parsed = parse_dt(&next).unwrap();
         assert!(parsed > now);
         assert_eq!(parsed.format("%H:%M:%S").to_string(), "09:00:00");
+    }
+
+    #[test]
+    fn save_keeps_a_snooze_while_the_schedule_is_unchanged() {
+        let now = parse_dt("2026-11-20T10:20:00").unwrap();
+        // Daily 09:00, already fired three times, snoozed to 10:30: the
+        // stored occurrence is off the grid on purpose.
+        let mut stored = reminder("2026-11-10T09:00:00", Recurrence::Daily, EndMode::Never, 3);
+        stored.next_due = Some("2026-11-20T10:30:00".into());
+
+        let mut edited = stored.clone();
+        edited.title = "renamed".into();
+        edited.note = "new note".into();
+        edited.next_due = None; // the editor sends no opinion
+        assert_eq!(
+            next_due_on_save(&edited, Some(&stored), now),
+            Some("2026-11-20T10:30:00".to_string())
+        );
+    }
+
+    #[test]
+    fn save_keeps_a_snoozed_one_shot_instead_of_refiring_its_past_start() {
+        let now = parse_dt("2026-11-20T10:20:00").unwrap();
+        let mut stored = reminder("2026-11-20T10:00:00", Recurrence::Once, EndMode::Never, 0);
+        stored.next_due = Some("2026-11-20T10:45:00".into());
+
+        let mut edited = stored.clone();
+        edited.title = "renamed".into();
+        assert_eq!(
+            next_due_on_save(&edited, Some(&stored), now),
+            Some("2026-11-20T10:45:00".to_string())
+        );
+    }
+
+    #[test]
+    fn save_recomputes_from_the_grid_when_the_schedule_changed() {
+        let now = parse_dt("2026-11-20T10:20:00").unwrap();
+        let mut stored = reminder("2026-11-10T09:00:00", Recurrence::Daily, EndMode::Never, 3);
+        stored.next_due = Some("2026-11-20T10:30:00".into());
+
+        // A new start time moves the whole grid, so the snooze is gone.
+        let mut moved = stored.clone();
+        moved.start_at = "2026-11-25T07:00:00".into();
+        assert_eq!(
+            next_due_on_save(&moved, Some(&stored), now),
+            Some("2026-11-25T07:00:00".to_string())
+        );
+
+        // A new rule likewise (daily -> weekly on Monday; Nov 23 2026 is a
+        // Monday), and so does re-enabling a completed reminder.
+        let mut reruled = stored.clone();
+        reruled.recurrence = Recurrence::Weekly { weekdays: vec![1] };
+        assert_eq!(
+            next_due_on_save(&reruled, Some(&stored), now),
+            Some("2026-11-23T09:00:00".to_string())
+        );
+        let mut completed = stored.clone();
+        completed.completed = true;
+        completed.next_due = None;
+        let mut revived = completed.clone();
+        revived.completed = false;
+        assert_eq!(
+            next_due_on_save(&revived, Some(&completed), now),
+            Some("2026-11-21T09:00:00".to_string())
+        );
+    }
+
+    #[test]
+    fn save_computes_fresh_for_a_new_reminder() {
+        let now = parse_dt("2026-11-20T10:20:00").unwrap();
+        let r = reminder("2026-11-21T09:00:00", Recurrence::Daily, EndMode::Never, 0);
+        assert_eq!(
+            next_due_on_save(&r, None, now),
+            Some("2026-11-21T09:00:00".to_string())
+        );
     }
 }

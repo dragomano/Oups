@@ -9,7 +9,9 @@ use crate::identity;
 use crate::locale::load_dict;
 use crate::model::{Reminder, fmt_dt, now_local};
 use crate::relative;
-use crate::scheduler::{MISSED_LABEL, emit_changed, initial_next_due, popup_label};
+use crate::scheduler::{
+    MISSED_LABEL, emit_changed, initial_next_due, next_due_on_save, popup_label,
+};
 use crate::settings::{self, Settings};
 use crate::snooze::{self, SnoozeUnit};
 use crate::startup;
@@ -137,8 +139,18 @@ pub fn upsert_reminder(
     app: AppHandle,
     mut reminder: Reminder,
 ) -> Result<Reminder, String> {
-    db::sanitize(&mut reminder);
-    reminder.next_due = initial_next_due(&reminder);
+    let now = now_local();
+    db::sanitize_at(&mut reminder, now);
+    // The draft is a snapshot from when the editor opened: fires keep advancing
+    // both fields while it is open, so the stored row owns them.
+    let stored = {
+        let conn = state.db_lock();
+        db::get_reminder(&conn, &reminder.id)?
+    };
+    if let Some(stored) = &stored {
+        reminder.fired_count = stored.fired_count;
+    }
+    reminder.next_due = next_due_on_save(&reminder, stored.as_ref(), now);
     {
         let conn = state.db_lock();
         db::upsert_reminder(&conn, &reminder)?;
