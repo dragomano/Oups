@@ -119,6 +119,15 @@
     padding: 12px 14px;
   }
 
+  /* Zebra striping: an even card carries a faint tint of the second panel and
+     lets the card behind it show through (lighter than the odd row in the dark
+     theme, a whisper of grey in the light one), so the list reads as alternating
+     rows without a border between them. `:where()` keeps the rule below the
+     overdue tint, which has to win on the rows it marks. */
+  .row:where(:nth-child(even)) {
+    background: color-mix(in srgb, var(--panel-2) 55%, transparent);
+  }
+
   /* 3px stripe + 12px padding holds the content box where 1px + 14px of a
      normal row does, so titles of striped and plain rows line up. */
   .row.high {
