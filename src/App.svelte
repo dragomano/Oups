@@ -137,7 +137,13 @@
       {#if view === "matrix"}
         <EisenhowerMatrix reminders={active} loading={!store.loaded} onEdit={openEdit} />
       {:else}
-        <ReminderList reminders={listed} loading={!store.loaded} onEdit={openEdit} onDuplicate={openDuplicate} />
+        <ReminderList
+          reminders={listed}
+          loading={!store.loaded}
+          showEmpty={view !== "done"}
+          onEdit={openEdit}
+          onDuplicate={openDuplicate}
+        />
       {/if}
     </main>
   </div>

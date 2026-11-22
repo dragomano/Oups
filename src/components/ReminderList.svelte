@@ -7,11 +7,13 @@
   let {
     reminders,
     loading,
+    showEmpty = true,
     onEdit,
     onDuplicate,
   }: {
     reminders: Reminder[];
     loading: boolean;
+    showEmpty?: boolean;
     onEdit: (r: Reminder) => void;
     onDuplicate: (r: Reminder) => void;
   } = $props();
@@ -19,7 +21,7 @@
 
 {#if loading}
   <div class="placeholder">…</div>
-{:else if reminders.length === 0}
+{:else if reminders.length === 0 && showEmpty}
   <div class="placeholder" role="status">
     <div class="big"><BellOff size={40} strokeWidth={1.5} aria-hidden="true" /></div>
     <div class="title">{t("list.empty_title")}</div>
