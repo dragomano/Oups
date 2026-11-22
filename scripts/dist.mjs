@@ -1,5 +1,5 @@
 // Assemble the portable distribution: Oups.exe + locales/ next to it,
-// zipped into dist/Oups_portable_win64_<version>.zip.
+// zipped into dist/Oups_<version>_win64.zip.
 // Run after `pnpm tauri build --no-bundle` (or use `pnpm dist`, which runs both).
 import { execSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
@@ -68,7 +68,7 @@ if (upxPath) {
 }
 
 // The portable build is x64 Windows only, so the name carries the target.
-const zipPath = path.join(root, "dist", `Oups_portable_win64_${version}.zip`);
+const zipPath = path.join(root, "dist", `Oups_${version}_win64.zip`);
 rmSync(zipPath, { force: true });
 
 // PowerShell Compress-Archive is always available on Windows.
