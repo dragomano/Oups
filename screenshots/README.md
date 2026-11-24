@@ -102,10 +102,11 @@ Four things about the capture are worth remembering:
   canvas rather than the popup's own window, and letting it through silently
   pushes the popup off the canvas. The shell sizes each frame instead, which is
   also where the popup's corner offset lives.
-- Keep the captured frame byte-stable. Every content page turns CSS transitions
-  and animations off (`no-motion.ts`), because a transition caught mid-flight —
-  the priority picker's rotating chevron, say — rasterizes differently on each
-  run and silently churns the committed PNGs. Edge is spawned with
+- Capture the final frame. Every content page turns CSS transitions and
+  animations off (`no-motion.ts`). Edge can still produce small color variations
+  when rasterizing the same frame. The driver keeps the existing PNG when at
+  most 64 pixels differ by at most 3 levels per RGB channel, with the same
+  dimensions and alpha values. Edge is spawned with
   `--remote-debugging-port=0`, the real port is read from the
   `DevToolsActivePort` file in the run's own profile dir, and the process tree
   is killed with `taskkill /T /F` on Windows: a fixed port once glued every

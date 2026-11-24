@@ -18,12 +18,13 @@
 // those orphans were what kept holding the old fixed port.
 
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import net from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { APP_H, APP_W, LANGUAGES, TRAY_H, TRAY_W } from "./geometry.mjs";
+import { writeScreenshot } from "./write-screenshot.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const project = resolve(here, "..");
@@ -431,10 +432,10 @@ try {
         { format: "png", fromSurface: true, captureBeyondViewport: false },
         sessionId,
       );
-      const file = join(outDir, `${shot.name}.${lang}.png`);
+      const filename = `${shot.name}.${lang}.png`;
+      const written = writeScreenshot(join(outDir, filename), Buffer.from(data, "base64"));
 
-      writeFileSync(file, Buffer.from(data, "base64"));
-      console.log(`captured ${shot.name}.${lang}.png`);
+      console.log(`${written ? "captured" : "unchanged"} ${filename}`);
     }
   }
 
