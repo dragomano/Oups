@@ -3,7 +3,7 @@ use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 use tokio::time::Duration;
 
 use crate::db;
-use crate::identity::display_name;
+use crate::locale;
 use crate::model::{EndMode, Recurrence, Reminder, fmt_dt, now_local, parse_dt};
 use crate::recurrence::next_after;
 use crate::startup;
@@ -324,8 +324,9 @@ pub fn startup_catchup(app: &AppHandle) {
         }
     }
     *state.missed_lock() = due;
-    // Window title = the app's display name from tauri.conf.json.
-    build_popup_window(app, MISSED_LABEL, &display_name(app));
+    let language = state.settings_lock().language.clone();
+    let title = locale::tr(&locale::load_dict(&language), "popup.missed_title");
+    build_popup_window(app, MISSED_LABEL, &title);
     emit_changed(app);
 }
 

@@ -7,12 +7,14 @@
   let {
     reminders,
     loading,
+    searching = false,
     showEmpty = true,
     onEdit,
     onDuplicate,
   }: {
     reminders: Reminder[];
     loading: boolean;
+    searching?: boolean;
     showEmpty?: boolean;
     onEdit: (r: Reminder) => void;
     onDuplicate: (r: Reminder) => void;
@@ -20,15 +22,15 @@
 </script>
 
 {#if loading}
-  <div class="placeholder">…</div>
-{:else if reminders.length === 0 && showEmpty}
-  <div class="placeholder" role="status">
+  <div class="placeholder" aria-hidden="true">…</div>
+{:else if reminders.length === 0 && (showEmpty || searching)}
+  <div class="placeholder">
     <div class="big"><BellOff size={40} strokeWidth={1.5} aria-hidden="true" /></div>
-    <div class="title">{t("list.empty_title")}</div>
-    <div class="hint">{t("list.empty_hint")}</div>
+    <div class="title">{t(searching ? "list.no_match" : "list.empty_title")}</div>
+    {#if !searching}<div class="hint">{t("list.empty_hint")}</div>{/if}
   </div>
 {:else}
-  <ul class="list">
+  <ul class="list" role="list">
     {#each reminders as r (r.id)}
       <ReminderRow {r} onEdit={() => onEdit(r)} onDuplicate={() => onDuplicate(r)} />
     {/each}

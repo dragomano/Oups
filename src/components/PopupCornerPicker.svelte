@@ -46,7 +46,7 @@
     </div>
     <div class="settings-monitor-stand" aria-hidden="true"><span></span></div>
   </div>
-  <span class="settings-position" aria-live="polite">{cornerLabel(value)}</span>
+  <span class="settings-position" aria-hidden="true">{cornerLabel(value)}</span>
 </div>
 
 <style>
@@ -144,5 +144,5 @@
     margin-top: 6px;
   }
 
-  .settings-arrows button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .settings-arrows button:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
 </style>

@@ -28,7 +28,7 @@
     open = event.newState === "open";
     if (open) {
       place();
-      panel.querySelector<HTMLButtonElement>(".active")?.focus({ preventScroll: true });
+      (panel.querySelector<HTMLButtonElement>(".active") ?? panel.querySelector("button"))?.focus();
     }
   }
 
@@ -46,11 +46,11 @@
       if (button.getClientRects().length === 0) panel.hidePopover();
       else place();
     };
-    document.addEventListener("keydown", escape, true);
+    panel.addEventListener("keydown", escape);
     window.addEventListener("resize", resize);
     window.addEventListener("scroll", place, true);
     return () => {
-      document.removeEventListener("keydown", escape, true);
+      panel.removeEventListener("keydown", escape);
       window.removeEventListener("resize", resize);
       window.removeEventListener("scroll", place, true);
     };
@@ -66,6 +66,7 @@
         class:active={days.includes(day)}
         aria-label={`${t("editor.day_of_month")} ${day}`}
         aria-pressed={days.includes(day)}
+        aria-disabled={days.length === 1 && days.includes(day) ? true : undefined}
         onclick={() => days = toggleMonthDay(days, day)}
       >{day}</button>
     {/each}
@@ -79,12 +80,13 @@
   bind:this={button}
   popovertarget={id}
   aria-haspopup="dialog"
+  aria-controls={id}
   aria-expanded={open}
   aria-label={`${t("editor.day_of_month")}: ${summary}`}
 >
   <span class="month-label">{t("editor.day_of_month")}</span>
   <span class="selected-days">{summary}</span>
-  <ChevronDown size={16} />
+  <ChevronDown size={16} aria-hidden="true" />
 </button>
 <div
   bind:this={panel}
@@ -94,6 +96,11 @@
   aria-label={t("editor.day_of_month")}
   tabindex="-1"
   class="month-popover"
+  onfocusout={(event) => {
+    if (event.relatedTarget instanceof Node && !panel.contains(event.relatedTarget) && event.relatedTarget !== button) {
+      panel.hidePopover();
+    }
+  }}
   ontoggle={toggled}
   style:top={`${position.top}px`}
   style:left={`${position.left}px`}

@@ -24,13 +24,16 @@
   let {
     reminders,
     loading,
+    searching = false,
     onEdit,
   }: {
     reminders: Reminder[];
     loading: boolean;
+    searching?: boolean;
     onEdit: (r: Reminder) => void;
   } = $props();
 
+  const id = $props.id();
   const META: Record<Quadrant, { title: string; icon: typeof Flame; cls: string }> = {
     do: { title: "matrix.do", icon: Flame, cls: "q-do" },
     delegate: { title: "matrix.delegate", icon: Hourglass, cls: "q-delegate" },
@@ -111,12 +114,12 @@
 </script>
 
 {#if loading}
-  <div class="placeholder">…</div>
+  <div class="placeholder" aria-hidden="true">…</div>
 {:else if total === 0}
-  <div class="placeholder" role="status">
+  <div class="placeholder">
     <div class="big"><Compass size={40} strokeWidth={1.5} aria-hidden="true" /></div>
-    <div class="title">{t("list.empty_title")}</div>
-    <div class="hint">{t("list.empty_hint")}</div>
+    <div class="title">{t(searching ? "list.no_match" : "list.empty_title")}</div>
+    {#if !searching}<div class="hint">{t("list.empty_hint")}</div>{/if}
   </div>
 {:else}
   <div class="matrix">
@@ -127,25 +130,26 @@
         <section
           class="quad {meta.cls}"
           class:drag-over={dragOverQuadrant === q}
-          aria-label={t(meta.title)}
+          aria-labelledby={`${id}-${q}`}
           ondragover={(e) => handleDragOver(e, q)}
           ondragleave={(e) => handleDragLeave(e)}
           ondrop={(e) => handleDrop(e, q)}
         >
           <header>
-            <span class="q-title">
+            <h2 class="q-title" id={`${id}-${q}`}>
               <span class="q-icon" aria-hidden="true"><Icon size={15} /></span>{t(meta.title)}
-            </span>
-            <span class="q-count">{items.length}</span>
+            </h2>
+            <span class="q-count" aria-hidden="true">{items.length}</span>
           </header>
           {#if items.length === 0}
             <div class="q-empty">{t("matrix.empty")}</div>
           {:else}
-            <ul class="q-list">
+            <ul class="q-list" role="list">
               {#each items as r (r.id)}
                 {@const due = dueText(r)}
                 <li
                   class="q-item"
+                  data-reminder-id={r.id}
                   class:dragging={draggedReminder?.id === r.id}
                   draggable="true"
                   ondragstart={(e) => handleDragStart(e, r)}
@@ -153,10 +157,11 @@
                 >
                   <button
                     class="q-item-btn"
-                    aria-label={due.text ? `${r.title} — ${due.text}` : r.title}
+                    aria-label={`${t("list.edit")}: ${r.title}`}
+                    aria-describedby={`${id}-${r.id}-details`}
                     onclick={() => onEdit(r)}
                   >
-                    <span class="prio-icon prio-{r.priority}" title={t(`priority.${r.priority}`)}>
+                    <span class="prio-icon prio-{r.priority}" title={t(`priority.${r.priority}`)} aria-hidden="true">
                       {#if r.priority === "critical"}
                         <ChevronsUp size={16} strokeWidth={2.5} />
                       {:else if r.priority === "high"}
@@ -168,6 +173,10 @@
                       {/if}
                     </span>
                     <span class="qt">{r.title}</span>
+                    <span id={`${id}-${r.id}-details`} class="sr-only">
+                      {t("editor.priority_label")}: {t(`priority.${r.priority}`)}.
+                      {#if due.text}{t("list.next_run")}: {due.text}.{/if}
+                    </span>
                     {#if due.text}
                       <span class="qtime" class:overdue={due.overdue}>{due.text}</span>
                     {/if}
@@ -239,6 +248,8 @@
   }
 
   .q-title {
+    margin: 0;
+    font-size: inherit;
     font-size: 13px;
     font-weight: 600;
     display: flex;

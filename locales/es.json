@@ -15,6 +15,14 @@
     "matrix": "Matriz de Eisenhower",
     "editor": "Editor de recordatorios"
   },
+  "a11y": {
+    "views": "Vistas de recordatorios",
+    "actions": "Acciones de recordatorios",
+    "loading": "Cargando recordatorios",
+    "results": "Recordatorios encontrados: {n}",
+    "reminder_enabled": "Recordatorio activado",
+    "interval_count": "Intervalo de repetición"
+  },
   "toolbar": {
     "new": "Nuevo recordatorio",
     "search": "Buscar recordatorios…",
@@ -124,6 +132,8 @@
     "until": "Hasta la fecha"
   },
   "date": {
+    "empty": "Ninguna fecha seleccionada",
+    "navigation": "Usa las flechas para moverte por días o semanas, Re Pág y Av Pág para cambiar de mes y esas mismas teclas con Mayús para cambiar de año. Pulsa Intro para seleccionar.",
     "clear": "Borrar",
     "today": "Hoy",
     "prev_month": "Mes anterior",
@@ -134,6 +144,7 @@
     "decrease": "Reducir"
   },
   "editor": {
+    "error_start_date": "Selecciona una fecha de inicio",
     "new_title": "Nuevo recordatorio",
     "edit_title": "Editar recordatorio",
     "title_label": "Título",
@@ -236,6 +247,7 @@
     "quit": "Salir"
   },
   "msg": {
+    "action_failed": "No se pudo completar la acción: {err}",
     "exported": "Recordatorios exportados: {n}",
     "imported": "Recordatorios importados: {n}",
     "export_failed": "Error al exportar: {err}",

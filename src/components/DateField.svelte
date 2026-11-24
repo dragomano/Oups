@@ -2,9 +2,11 @@
   import CalendarDays from "@lucide/svelte/icons/calendar-days";
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
-  import { untrack } from "svelte";
-  import { i18n, t } from "../lib/i18n.svelte";
+  import { tick, untrack } from "svelte";
+  import { calendarDate, calendarTarget, calendarWeeks } from "../lib/calendar";
+  import { i18n, localeDir, t } from "../lib/i18n.svelte";
   import { floatingPanel } from "../lib/floating-panel";
+  import { watchFloatingPopup } from "../lib/floating-popup";
 
   type Parts = { year: number; month: number; day: number };
 
@@ -13,13 +15,16 @@
     min = "",
     ariaLabel = "",
     onchange,
+    ariaDescribedBy,
   }: {
     value?: string;
     min?: string;
     ariaLabel?: string;
     onchange?: (value: string) => void;
+    ariaDescribedBy?: string;
   } = $props();
 
+  const id = $props.id();
   const WIDTH = 300;
 
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -33,7 +38,7 @@
   }
 
   function iso(parts: Parts): string {
-    return `${parts.year}-${pad(parts.month + 1)}-${pad(parts.day)}`;
+    return `${String(parts.year).padStart(4, "0")}-${pad(parts.month + 1)}-${pad(parts.day)}`;
   }
 
   function fromDate(date: Date): Parts {
@@ -47,6 +52,7 @@
   let selected = $state<Parts | null>(initial);
   let viewYear = $state(initial?.year ?? today.year);
   let viewMonth = $state(initial?.month ?? today.month);
+  let cursor = $state(iso(initial ?? today));
   let open = $state(false);
   let root = $state<HTMLElement>();
   let trigger = $state<HTMLButtonElement>();
@@ -66,36 +72,21 @@
 
   const monthTitle = $derived.by(() => {
     const label = new Intl.DateTimeFormat(lang, { month: "long", year: "numeric" }).format(
-      new Date(viewYear, viewMonth, 1),
+      calendarDate(viewYear, viewMonth, 1),
     );
 
     return label.charAt(0).toLocaleUpperCase(lang) + label.slice(1);
   });
 
-  const weekdays = $derived.by(() => {
+  const weekdays = $derived(Array.from({ length: 7 }, (_, index) => {
     // 2020-01-05 was a Sunday; the calendar starts the week there.
-    return Array.from({ length: 7 }, (_, index) =>
-      new Intl.DateTimeFormat(lang, { weekday: "short" })
-        .format(new Date(2020, 0, 5 + index))
-        .replace(/^./, (char) => char.toLocaleUpperCase(lang)),
-    );
-  });
-
-  const weeks = $derived.by(() => {
-    const first = new Date(viewYear, viewMonth, 1);
-    const start = new Date(viewYear, viewMonth, 1 - first.getDay());
-    const days: Date[] = [];
-
-    for (let index = 0; index < 42; index++) {
-      days.push(new Date(start.getFullYear(), start.getMonth(), start.getDate() + index));
-    }
-
-    const rows: Date[][] = [];
-
-    for (let index = 0; index < 6; index++) rows.push(days.slice(index * 7, index * 7 + 7));
-
-    return rows;
-  });
+    const date = new Date(2020, 0, 5 + index);
+    return {
+      short: new Intl.DateTimeFormat(lang, { weekday: "short" }).format(date),
+      full: new Intl.DateTimeFormat(lang, { weekday: "long" }).format(date),
+    };
+  }));
+  const weeks = $derived(calendarWeeks(viewYear, viewMonth));
 
   function isSame(date: Date, parts: Parts | null): boolean {
     return Boolean(
@@ -116,10 +107,11 @@
 
   function close() {
     open = false;
-    trigger?.focus();
+    trigger?.focus({ preventScroll: true });
   }
 
   function choose(date: Date) {
+    if (isBeforeMin(date) || date.getFullYear() < 1 || date.getFullYear() > 9999) return;
     const next = fromDate(date);
 
     viewYear = next.year;
@@ -133,18 +125,41 @@
     close();
   }
 
-  function show() {
-    if (selected) {
-      viewYear = selected.year;
-      viewMonth = selected.month;
-    }
-
-    open = true;
+  function setCursor(date: Date) {
+    const parts = fromDate(date);
+    cursor = iso(parts);
+    viewYear = parts.year;
+    viewMonth = parts.month;
   }
 
-  function toggle() {
-    if (open) open = false;
-    else show();
+  async function focusDay() {
+    await tick();
+    place();
+    await tick();
+    popover?.querySelector<HTMLElement>(`[data-date="${cursor}"]`)?.focus();
+  }
+
+  async function show() {
+    const date = selected ?? today;
+    setCursor(calendarDate(date.year, date.month, date.day));
+    open = true;
+    await focusDay();
+  }
+
+  function onDayKeydown(event: KeyboardEvent, date: Date) {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      choose(date);
+      return;
+    }
+
+    const next = calendarTarget(date, event.key, event.shiftKey, localeDir() === "rtl");
+    if (!next || next.getFullYear() < 1 || next.getFullYear() > 9999) return;
+    event.preventDefault();
+    setCursor(next);
+    void focusDay();
   }
 
   /** The popover is position: fixed, so the editor's scroll container cannot clip it. */
@@ -154,7 +169,7 @@
     const rect = trigger.getBoundingClientRect();
     const fitted = floatingPanel(
       { left: rect.left, top: rect.top, bottom: rect.bottom, width: Math.min(WIDTH, window.innerWidth - 16) },
-      popover?.offsetHeight ?? 320,
+      popover?.scrollHeight ?? 320,
       window.innerWidth,
       window.innerHeight,
     );
@@ -163,10 +178,9 @@
   }
 
   function shift(delta: number) {
-    const next = new Date(viewYear, viewMonth + delta, 1);
-
-    viewYear = next.getFullYear();
-    viewMonth = next.getMonth();
+    const next = calendarDate(viewYear, viewMonth + delta, 1);
+    if (next.getFullYear() < 1 || next.getFullYear() > 9999) return;
+    setCursor(next);
   }
 
   function dayLabel(date: Date): string {
@@ -174,42 +188,8 @@
   }
 
   $effect(() => {
-    if (!open || !popover) return;
-
-    place();
-    const frame = requestAnimationFrame(place);
-
-    const onPointerDown = (event: PointerEvent) => {
-      if (!root?.contains(event.target as Node)) open = false;
-    };
-    const onScroll = (event: Event) => {
-      const target = event.target;
-
-      if (target instanceof Node && root?.contains(target)) return;
-
-      open = false;
-    };
-    const onKeydown = (event: KeyboardEvent) => {
-      // Only the calendar closes: the editor also listens for Escape.
-      if (event.key !== "Escape") return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      close();
-    };
-
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeydown, true);
-    window.addEventListener("scroll", onScroll, true);
-    window.addEventListener("resize", onScroll);
-
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKeydown, true);
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", onScroll);
-    };
+    if (!open || !root) return;
+    return watchFloatingPopup(root, () => (open = false), close, place);
   });
 </script>
 
@@ -218,10 +198,13 @@
     type="button"
     class="date-trigger"
     bind:this={trigger}
-    aria-label={ariaLabel}
+    aria-label={`${ariaLabel}: ${selected ? dayLabel(calendarDate(selected.year, selected.month, selected.day)) : t("date.empty")}`}
+    aria-describedby={ariaDescribedBy}
+    data-invalid={ariaDescribedBy ? "" : undefined}
+    aria-controls={open ? id : undefined}
     aria-haspopup="dialog"
     aria-expanded={open}
-    onclick={toggle}
+    onclick={() => (open ? close() : void show())}
   >
     <span>{display}</span>
     <CalendarDays size={16} aria-hidden="true" />
@@ -230,6 +213,7 @@
   {#if open}
     <div
       class="date-popover"
+      {id}
       bind:this={popover}
       role="dialog"
       aria-label={ariaLabel}
@@ -242,45 +226,51 @@
         <button type="button" class="date-nav" aria-label={t("date.prev_month")} onclick={() => shift(-1)}>
           <ChevronLeft size={18} aria-hidden="true" />
         </button>
-        <div class="date-month">{monthTitle}</div>
+        <div class="date-month" id={`${id}-month`} aria-live="polite">{monthTitle}</div>
         <button type="button" class="date-nav" aria-label={t("date.next_month")} onclick={() => shift(1)}>
           <ChevronRight size={18} aria-hidden="true" />
         </button>
       </div>
 
-      <div class="date-weekdays" aria-hidden="true">
-        {#each weekdays as weekday (weekday)}
-          <span>{weekday}</span>
-        {/each}
-      </div>
-
-      <div class="date-grid">
-        {#each weeks as week, row (row)}
-          {#each week as date (date.getTime())}
-            {@const outside = date.getMonth() !== viewMonth}
-            {@const weekend = date.getDay() === 0 || date.getDay() === 6}
-            {@const active = isSame(date, selected)}
-            <button
-              type="button"
-              class="date-day"
-              class:outside
-              class:weekend
-              class:selected={active}
-              class:today={isSame(date, today)}
-              disabled={isBeforeMin(date)}
-              aria-label={dayLabel(date)}
-              aria-pressed={active}
-              onclick={() => choose(date)}
-            >
-              {date.getDate()}
-            </button>
+      <div class="sr-only" id={`${id}-navigation`}>{t("date.navigation")}</div>
+      <div class="date-grid" role="grid" aria-labelledby={`${id}-month`} aria-describedby={`${id}-navigation`}>
+        <div class="date-weekdays date-row" role="row">
+          {#each weekdays as weekday (weekday.full)}
+            <span role="columnheader" aria-label={weekday.full}>{weekday.short}</span>
           {/each}
+        </div>
+        {#each weeks as week, row (row)}
+          <div class="date-row" role="row">
+            {#each week as date (date.getTime())}
+              {@const key = iso(fromDate(date))}
+              {@const active = isSame(date, selected)}
+              <div
+                role="gridcell"
+                class="date-day"
+                class:outside={date.getMonth() !== viewMonth}
+                class:weekend={date.getDay() === 0 || date.getDay() === 6}
+                class:selected={active}
+                class:today={isSame(date, today)}
+                data-date={key}
+                tabindex={key === cursor ? 0 : -1}
+                aria-selected={active}
+                aria-disabled={isBeforeMin(date) || date.getFullYear() < 1 || date.getFullYear() > 9999}
+                aria-label={dayLabel(date)}
+                aria-current={isSame(date, today) ? "date" : undefined}
+                onclick={() => choose(date)}
+                onkeydown={(event) => onDayKeydown(event, date)}
+              >
+                {date.getDate()}
+              </div>
+            {/each}
+          </div>
         {/each}
       </div>
 
       <div class="date-actions">
+        <button type="button" onclick={close}>{t("settings.close")}</button>
         <button type="button" onclick={clear}>{t("date.clear")}</button>
-        <button type="button" onclick={() => choose(new Date())}>{t("date.today")}</button>
+        <button type="button" disabled={isBeforeMin(new Date())} onclick={() => choose(new Date())}>{t("date.today")}</button>
       </div>
     </div>
   {/if}
@@ -311,6 +301,8 @@
     cursor: pointer;
   }
 
+  .date-trigger[data-invalid] { border-color: var(--danger); }
+
   .date-trigger:hover {
     border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
   }
@@ -318,7 +310,6 @@
   .date-trigger:focus-visible {
     border-color: var(--accent);
     box-shadow: 0 0 0 2px var(--accent-soft);
-    outline: none;
   }
 
   .date-trigger :global(svg) {
@@ -372,13 +363,16 @@
     cursor: pointer;
   }
 
+  .date-nav:dir(rtl) :global(svg) { transform: scaleX(-1); }
+
   .date-nav:hover {
     background: var(--panel-2);
     color: var(--text);
   }
 
-  .date-weekdays,
-  .date-grid {
+  .date-grid { display: grid; gap: 2px; }
+
+  .date-row {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 2px;
@@ -411,7 +405,7 @@
     cursor: pointer;
   }
 
-  .date-day:hover:not(:disabled) {
+  .date-day:hover:not([aria-disabled="true"]) {
     background: var(--panel-2);
   }
 
@@ -436,7 +430,7 @@
     font-weight: 600;
   }
 
-  .date-day:disabled {
+  .date-day[aria-disabled="true"] {
     cursor: default;
     opacity: 0.35;
   }

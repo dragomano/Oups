@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { untrack } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { api, type LocaleInfo, type SettingsView } from "../lib/api";
   import { t, loadLocale } from "../lib/i18n.svelte";
   import { radioGroup } from "../lib/radio-group";
@@ -21,6 +21,10 @@
     nativeFrame: boolean;
     onClose: () => void;
   } = $props();
+
+  const id = $props.id();
+  let dialog: HTMLDivElement;
+  onMount(() => dialog?.focus({ preventScroll: true }));
 
   const initial = untrack(() => $state.snapshot(settings));
   let language = $state(initial.language);
@@ -44,7 +48,14 @@
   ];
 
   async function toggleAutostart(event: Event) {
-    autostart = await api.setAutostart((event.currentTarget as HTMLInputElement).checked);
+    const input = event.currentTarget as HTMLInputElement;
+    try {
+      autostart = await api.setAutostart(input.checked);
+      input.checked = autostart;
+    } catch (error) {
+      input.checked = autostart;
+      alert(t("msg.action_failed", { err: String(error) }));
+    }
   }
 
   // Save on change; closing the dialog needs no save step.
@@ -56,7 +67,7 @@
         await loadLocale(language);
       }
     } catch (e) {
-      console.error("failed to save settings", e);
+      alert(t("msg.action_failed", { err: String(e) }));
     }
   }
 
@@ -77,7 +88,10 @@
   }
 </script>
 
-  <div class="settings-dialog" role="dialog" aria-modal="true" aria-label={t("settings.title")}>
+<svelte:head><title>{t("settings.title")}</title></svelte:head>
+
+  <div class="settings-dialog" bind:this={dialog} role="dialog" aria-modal="true" tabindex="-1"
+    aria-label={t("settings.title")} aria-describedby={id}>
     {#if !nativeFrame}
       <header class="settings-head" data-tauri-drag-region>
         <h2 data-tauri-drag-region>{t("settings.title")}</h2>
@@ -91,20 +105,20 @@
       <div class="settings-grid">
         <section class="settings-group">
           <h3><Palette size={16} aria-hidden="true" />{t("settings.group_appearance")}</h3>
-          <label class="settings-field">
+          <div class="settings-field">
             <span>{t("settings.language")}</span>
             <Select
               value={language}
               onchange={(next) => { language = next; void persist(); }}
-              options={locales.map((locale) => ({ value: locale.code, label: locale.name }))}
+              options={locales.map((locale) => ({ value: locale.code, label: locale.name, lang: locale.code }))}
               ariaLabel={t("settings.language")}
             />
-          </label>
+          </div>
           <div class="settings-field settings-theme-field">
             <span>{t("settings.theme")}</span>
-            <div class="settings-themes" role="group" aria-label={t("settings.theme")}>
+            <div class="settings-themes" role="radiogroup" aria-label={t("settings.theme")} use:radioGroup>
               {#each THEMES as item (item.mode)}
-                <button type="button" aria-label={t(`theme.${item.mode}`)} title={t(`theme.${item.mode}`)} aria-pressed={theme === item.mode} onclick={() => pickTheme(item.mode)}>
+                <button type="button" aria-label={t(`theme.${item.mode}`)} title={t(`theme.${item.mode}`)} role="radio" aria-checked={theme === item.mode} tabindex={theme === item.mode ? 0 : -1} onclick={() => pickTheme(item.mode)}>
                   <item.icon size={16} aria-hidden="true" /><span>{t(`theme.${item.mode}`)}</span>
                 </button>
               {/each}
@@ -148,7 +162,7 @@
         </section>
       </div>
     </div>
-    <footer class="settings-footer"><Check size={14} aria-hidden="true" /><span>{t("settings.applied_immediately")}</span></footer>
+    <footer class="settings-footer" {id}><Check size={14} aria-hidden="true" /><span>{t("settings.applied_immediately")}</span></footer>
   </div>
 
 <svelte:window onkeydown={onKeydown} />
@@ -243,7 +257,7 @@
   }
 
   .settings-themes :global(svg) { flex: none; }
-  .settings-themes button[aria-pressed="true"] { background: var(--panel); color: var(--text); }
+  .settings-themes button[aria-checked="true"] { background: var(--panel); color: var(--text); }
 
   @container settings-theme (max-width: 350px) {
     .settings-themes button span { display: none; }
@@ -298,8 +312,8 @@
   }
 
   .settings-footer :global(svg) { flex: none; }
-  .settings-dialog button:focus-visible,
-  .settings-check .switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .settings-dialog:focus { outline: none; }
+  .settings-swatch:focus-visible { outline: 2px dashed var(--text); outline-offset: 4px; }
 
   @media (min-width: 561px) and (max-height: 640px) {
     .settings-head { padding-top: 16px; }
@@ -321,7 +335,7 @@
     .settings-swatch { position: relative; width: 44px; max-width: 44px; height: 44px; border: none; background: transparent; }
     .settings-swatch::before { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: var(--swatch); border: 2px solid var(--border); }
     .settings-swatch :global(svg) { z-index: 1; }
-    .settings-swatch[aria-checked="true"] { outline: none; }
+    .settings-swatch[aria-checked="true"]:not(:focus-visible) { outline: none; }
     .settings-swatch[aria-checked="true"]::before { outline: 2px solid var(--text); outline-offset: 3px; }
     .settings-footer { margin-inline: 16px; padding-block: 14px; }
   }

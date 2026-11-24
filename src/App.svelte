@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { listen } from "@tauri-apps/api/event";
   import { open as openDialog, save as saveDialog } from "@tauri-apps/plugin-dialog";
   import Toolbar from "./components/Toolbar.svelte";
@@ -13,6 +13,9 @@
   import { store, initState } from "./lib/state.svelte";
   import { applyBackdrop, applyTheme } from "./lib/theme";
 
+  const viewId = $props.id();
+  const views = ["active", "done", "matrix"] as const;
+  let content: HTMLElement;
   let query = $state("");
   let view = $state<View>("active");
   let appName = $state("");
@@ -34,7 +37,7 @@
     await loadLocale(s.language);
     await initState();
     listen("menu-new-reminder", () => openNew());
-    listen("menu-open-settings", () => void api.openSettings());
+    listen("menu-open-settings", openSettings);
     listen("settings-changed", async () => {
       const settings = await api.getSettings();
       applyTheme(settings.theme, settings.accent);
@@ -43,21 +46,30 @@
     });
     // The window is created hidden (tauri.conf.json); reveal it only once the
     // theme, language and data are in place, so the first frame is final.
+    await tick();
     void api.mainWindowReady();
   });
 
+  function reportError(error: unknown) {
+    alert(t("msg.action_failed", { err: String(error) }));
+  }
+
+  function openSettings() {
+    void api.openSettings().catch(reportError);
+  }
+
   function openNew() {
-    void api.openEditor();
+    void api.openEditor().catch(reportError);
   }
 
   function openEdit(r: Reminder) {
-    void api.openEditor(r);
+    void api.openEditor(r).catch(reportError);
   }
 
   // Duplicate: open the editor pre-filled as a NEW reminder with a fresh id,
   // so the user can tweak date/time before saving the copy.
   function openDuplicate(r: Reminder) {
-    void api.openEditor(r, true);
+    void api.openEditor(r, true).catch(reportError);
   }
 
   async function doExport() {
@@ -109,8 +121,35 @@
 
   const active = $derived(searched.filter((r) => !r.completed && r.enabled));
   const done = $derived(searched.filter((r) => r.completed || !r.enabled));
-  const listed = $derived(view === "active" ? active : done);
+  const listed = $derived(view === "done" ? done : active);
+  const searching = $derived(query.trim().length > 0);
+  const status = $derived(!store.loaded ? t("a11y.loading") :
+    searching ? (listed.length ? t("a11y.results", { n: listed.length }) : t("list.no_match")) :
+    listed.length === 0 ? t("list.empty_title") : "");
+
+  $effect.pre(() => {
+    const reminders = listed;
+    const focused = document.activeElement;
+    const row = focused?.closest<HTMLElement>("[data-reminder-id]");
+    const id = row?.dataset.reminderId;
+    if (!id || !content?.contains(row)) return;
+
+    // A refreshed row may disappear or move to a different matrix quadrant.
+    void tick().then(() => {
+      if (focused?.isConnected || document.activeElement !== document.body) return;
+      if (reminders.some((reminder) => reminder.id === id)) {
+        const replacement = content.querySelector<HTMLButtonElement>(`[data-reminder-id="${CSS.escape(id)}"] .q-item-btn`);
+        if (replacement) {
+          replacement.focus();
+          return;
+        }
+      }
+      content.querySelector<HTMLElement>('[role="tabpanel"]:not([hidden])')?.focus();
+    });
+  });
 </script>
+
+<svelte:head><title>{appName}</title></svelte:head>
 
 {#snippet captionControls()}
   <WindowControls />
@@ -125,26 +164,42 @@
 -->
 <div class="frame" data-tauri-drag-region="deep">
   <div class="card">
-    <TitleBar name={appName} bind:view windowControls={captionControls} />
+    <TitleBar name={appName} bind:view {viewId} windowControls={captionControls} />
     <Toolbar
       bind:query
       onNew={openNew}
-      onSettings={() => void api.openSettings()}
+      onSettings={openSettings}
       onImport={doImport}
       onExport={doExport}
     />
-    <main class="content" class:matrix={view === "matrix"} data-tauri-drag-region="false">
-      {#if view === "matrix"}
-        <EisenhowerMatrix reminders={active} loading={!store.loaded} onEdit={openEdit} />
-      {:else}
-        <ReminderList
-          reminders={listed}
-          loading={!store.loaded}
-          showEmpty={view !== "done"}
-          onEdit={openEdit}
-          onDuplicate={openDuplicate}
-        />
-      {/if}
+    <div class="sr-only" role="status">{status}</div>
+    <main bind:this={content} class="content" class:matrix={view === "matrix"} data-tauri-drag-region="false">
+      {#each views as tab (tab)}
+        <div
+          id={`${viewId}-panel-${tab}`}
+          class="view-panel"
+          role="tabpanel"
+          aria-labelledby={`${viewId}-tab-${tab}`}
+          aria-busy={!store.loaded}
+          tabindex="0"
+          hidden={view !== tab}
+        >
+          {#if view === tab}
+            {#if tab === "matrix"}
+              <EisenhowerMatrix reminders={active} loading={!store.loaded} {searching} onEdit={openEdit} />
+            {:else}
+              <ReminderList
+                reminders={listed}
+                loading={!store.loaded}
+                showEmpty={view !== "done"}
+                {searching}
+                onEdit={openEdit}
+                onDuplicate={openDuplicate}
+              />
+            {/if}
+          {/if}
+        </div>
+      {/each}
     </main>
   </div>
 </div>
@@ -177,6 +232,8 @@
   }
 
   /* The matrix owns the full height so the four quadrants share it evenly. */
+  .content.matrix .view-panel { height: 100%; }
+
   .content.matrix {
     overflow: hidden;
     padding-bottom: 12px;

@@ -15,6 +15,14 @@
     "matrix": "Eisenhower matrix",
     "editor": "Reminder editor"
   },
+  "a11y": {
+    "views": "Reminder views",
+    "actions": "Reminder actions",
+    "loading": "Loading reminders",
+    "results": "Matching reminders: {n}",
+    "reminder_enabled": "Reminder enabled",
+    "interval_count": "Repeat interval"
+  },
   "toolbar": {
     "new": "New reminder",
     "search": "Search reminders…",
@@ -124,6 +132,8 @@
     "until": "Until date"
   },
   "date": {
+    "empty": "No date selected",
+    "navigation": "Use the arrow keys to move by day or week, Page Up and Page Down to change months, and Shift with those keys to change years. Press Enter to select.",
     "clear": "Clear",
     "today": "Today",
     "prev_month": "Previous month",
@@ -134,6 +144,7 @@
     "decrease": "Decrease"
   },
   "editor": {
+    "error_start_date": "Pick a start date",
     "new_title": "New reminder",
     "edit_title": "Edit reminder",
     "title_label": "Title",
@@ -238,6 +249,7 @@
     "quit": "Quit"
   },
   "msg": {
+    "action_failed": "Action failed: {err}",
     "exported": "Exported reminders: {n}",
     "imported": "Imported reminders: {n}",
     "export_failed": "Export failed: {err}",

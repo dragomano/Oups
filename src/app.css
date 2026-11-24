@@ -144,6 +144,16 @@ body {
   height: 100vh;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 input,
 textarea,
 button {
@@ -166,6 +176,17 @@ input:focus,
 textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[role="gridcell"]:focus-visible,
+a:focus-visible,
+[role="gridcell"]:focus-visible,
+[role="tabpanel"]:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: -2px;
 }
 
 textarea {
@@ -314,4 +335,23 @@ button:disabled {
 
 .prio-critical {
   color: var(--danger);
+}
+
+@media (forced-colors: active) {
+  .switch {
+    appearance: auto;
+    inline-size: 20px;
+    border-radius: 0;
+  }
+
+  .switch::after {
+    display: none;
+  }
+
+  button[aria-selected="true"],
+  [aria-pressed="true"],
+  button[aria-checked="true"],
+  [aria-activedescendant] + [role="listbox"] [role="option"].active {
+    border: 1px solid Highlight;
+  }
 }

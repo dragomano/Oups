@@ -33,32 +33,36 @@
    */
   const overdue = $derived(!inactive && dueKind(r.nextDue, clock.now) === "overdue");
 
-  function toggle() {
-    api.setEnabled(r.id, !r.enabled).catch((e) => console.error(e));
+  function toggle(event: Event & { currentTarget: HTMLInputElement }) {
+    const input = event.currentTarget;
+    api.setEnabled(r.id, input.checked).catch((error) => {
+      input.checked = r.enabled;
+      alert(t("msg.action_failed", { err: String(error) }));
+    });
   }
 
   function del() {
     if (confirm(t("msg.delete_confirm"))) {
-      api.deleteReminder(r.id).catch((e) => console.error(e));
+      api.deleteReminder(r.id).catch((error) => alert(t("msg.action_failed", { err: String(error) })));
     }
   }
 </script>
 
-<li class="row" class:inactive class:overdue class:high={r.priority === "high" && !inactive} class:critical={r.priority === "critical" && !inactive}>
-  <span class="prio-icon prio-{r.priority}" title={t(`priority.${r.priority}`)}>
+<li class="row" data-reminder-id={r.id} class:inactive class:overdue class:high={r.priority === "high" && !inactive} class:critical={r.priority === "critical" && !inactive}>
+  <span class="prio-icon prio-{r.priority}" title={t(`priority.${r.priority}`)} aria-hidden="true">
     {#if r.priority === "critical"}
       <ChevronsUp size={18} strokeWidth={2.5} />
     {:else if r.priority === "high"}
       <ChevronUp size={18} strokeWidth={2.5} />
     {:else if r.priority === "normal"}
-      <Circle size={16} />
+      <Circle size={16} aria-hidden="true" />
     {:else}
       <ChevronDown size={18} strokeWidth={2.5} />
     {/if}
   </span>
 
   <div class="title-line">
-    <span class="title">{r.title}</span>
+    <h2 class="title">{r.title}</h2>
     {#if overdue}
       <span class="chip overdue-chip">{t("list.overdue")}</span>
     {/if}
@@ -71,6 +75,7 @@
   </div>
 
   <div class="meta">
+    <span class="sr-only">{`${t("editor.priority_label")}: ${t(`priority.${r.priority}`)}. `}</span>
     <span class="rec">{recurrenceText(r.recurrence)}</span>
   </div>
 
@@ -94,10 +99,10 @@
   </div>
 
   <div class="actions">
-    <input class="switch" type="checkbox" role="switch" checked={r.enabled} onchange={toggle} title={r.enabled ? t("list.disable") : t("list.enable")} aria-label={r.enabled ? t("list.disable") : t("list.enable")} />
-    <button class="icon icon-edit" onclick={onEdit} title={t("list.edit")} aria-label={t("list.edit")}><Pencil size={16} /></button>
-    <button class="icon icon-copy" onclick={onDuplicate} title={t("list.duplicate")} aria-label={t("list.duplicate")}><Copy size={16} /></button>
-    <button class="icon danger icon-delete" onclick={del} title={t("list.delete")} aria-label={t("list.delete")}><Trash2 size={16} /></button>
+    <input class="switch" type="checkbox" role="switch" checked={r.enabled} onchange={toggle} title={r.enabled ? t("list.disable") : t("list.enable")} aria-label={`${t("a11y.reminder_enabled")}: ${r.title}`} />
+    <button class="icon icon-edit" onclick={onEdit} title={t("list.edit")} aria-label={`${t("list.edit")}: ${r.title}`}><Pencil size={16} aria-hidden="true" /></button>
+    <button class="icon icon-copy" onclick={onDuplicate} title={t("list.duplicate")} aria-label={`${t("list.duplicate")}: ${r.title}`}><Copy size={16} aria-hidden="true" /></button>
+    <button class="icon danger icon-delete" onclick={del} title={t("list.delete")} aria-label={`${t("list.delete")}: ${r.title}`}><Trash2 size={16} aria-hidden="true" /></button>
   </div>
 </li>
 
@@ -175,6 +180,8 @@
   }
 
   .title {
+    margin: 0;
+    font-size: inherit;
     font-weight: 600;
     min-width: 0;
   }

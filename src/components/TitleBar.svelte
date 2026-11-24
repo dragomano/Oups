@@ -1,19 +1,22 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
   import type { View } from "../lib/api";
-  import { t } from "../lib/i18n.svelte";
+  import { nextRadioIndex } from "../lib/radio-group";
+  import { localeDir, t } from "../lib/i18n.svelte";
   import icon from "../../src-tauri/icons/32x32.png";
 
   let {
     name,
     view = $bindable<View>("active"),
     windowControls,
+    viewId,
   }: {
     /** The app's display name, straight from productName (not translatable). */
     name: string;
     view?: View;
     /** The window's caption buttons, rendered in the strip's last cell. */
     windowControls?: Snippet;
+    viewId: string;
   } = $props();
 
   const views = [
@@ -21,6 +24,18 @@
     { id: 'done', label: 'toolbar.done' },
     { id: 'matrix', label: 'toolbar.matrix' },
   ] as const;
+  function moveTab(event: KeyboardEvent, index: number) {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const key = event.key;
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(key)) return;
+    const rtl = localeDir() === "rtl";
+    const direction = rtl && key === "ArrowLeft" ? "ArrowRight" : rtl && key === "ArrowRight" ? "ArrowLeft" : key;
+    const next = nextRadioIndex(direction, index, views.length);
+    if (next === null) return;
+    event.preventDefault();
+    view = views[next].id;
+    document.getElementById(`${viewId}-tab-${view}`)?.focus();
+  }
 </script>
 
 <!-- The window's title strip, inside the card: the brand on the left, the view
@@ -34,13 +49,17 @@
   </div>
 
   <div class="slot">
-    <div class="seg" role="tablist">
-      {#each views as v (v.id)}
+    <div class="seg" role="tablist" aria-label={t("a11y.views")}>
+      {#each views as v, index (v.id)}
         <button
           class="seg-btn"
+          type="button"
           role="tab"
+          id={`${viewId}-tab-${v.id}`}
+          aria-controls={`${viewId}-panel-${v.id}`}
+          tabindex={view === v.id ? 0 : -1}
+          onkeydown={(event) => moveTab(event, index)}
           aria-selected={view === v.id}
-          aria-label={t(v.label)}
           class:active={view === v.id}
           onclick={() => (view = v.id)}
         >

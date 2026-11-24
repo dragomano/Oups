@@ -7,13 +7,15 @@
     min,
     max,
     step = 1,
-    ariaLabel = "",
+    ariaLabel,
+    ariaDescribedBy,
   }: {
     value?: number;
     min?: number;
     max?: number;
     step?: number;
-    ariaLabel?: string;
+    ariaLabel: string;
+    ariaDescribedBy?: string;
   } = $props();
 
   // Text that is not a number reports NaN, the way a native number input reports
@@ -22,6 +24,9 @@
 
   let input = $state<HTMLInputElement>();
   let current = $state(String(value));
+  const numeric = $derived(parsed(current));
+  const invalid = $derived(!Number.isInteger(numeric) ||
+    (min !== undefined && numeric < min) || (max !== undefined && numeric > max));
 
   $effect(() => {
     const next = value;
@@ -68,8 +73,14 @@
     class="number-input"
     bind:this={input}
     type="text"
+    role="spinbutton"
     inputmode="numeric"
     aria-label={ariaLabel}
+    aria-valuenow={Number.isFinite(numeric) ? numeric : undefined}
+    aria-valuemin={min}
+    aria-valuemax={max}
+    aria-invalid={invalid || undefined}
+    aria-describedby={ariaDescribedBy}
     value={current}
     oninput={(event) => {
       current = event.currentTarget.value;
@@ -83,6 +94,7 @@
     onchange={(event) => commit(event.currentTarget.value)}
     onblur={(event) => commit(event.currentTarget.value)}
     onkeydown={(event) => {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
       if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
 
       event.preventDefault();
@@ -90,8 +102,8 @@
     }}
   />
   <div class="number-steps">
-    <button type="button" class="step up" aria-label={t("number.increase")} onclick={() => bump(1)}></button>
-    <button type="button" class="step down" aria-label={t("number.decrease")} onclick={() => bump(-1)}></button>
+    <button type="button" class="step up" tabindex="-1" aria-label={t("number.increase")} onclick={() => bump(1)}></button>
+    <button type="button" class="step down" tabindex="-1" aria-label={t("number.decrease")} onclick={() => bump(-1)}></button>
   </div>
 </div>
 
@@ -125,7 +137,6 @@
     font: inherit;
     font-size: 15px;
     font-variant-numeric: tabular-nums;
-    outline: none;
   }
 
   .number-steps {

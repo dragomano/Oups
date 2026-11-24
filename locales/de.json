@@ -15,6 +15,14 @@
     "matrix": "Eisenhower-Matrix",
     "editor": "Erinnerung bearbeiten"
   },
+  "a11y": {
+    "views": "Erinnerungsansichten",
+    "actions": "Aktionen für Erinnerungen",
+    "loading": "Erinnerungen werden geladen",
+    "results": "Gefundene Erinnerungen: {n}",
+    "reminder_enabled": "Erinnerung aktiviert",
+    "interval_count": "Wiederholungsintervall"
+  },
   "toolbar": {
     "new": "Neue Erinnerung",
     "search": "Erinnerungen suchen…",
@@ -124,6 +132,8 @@
     "until": "Bis Datum"
   },
   "date": {
+    "empty": "Kein Datum ausgewählt",
+    "navigation": "Mit den Pfeiltasten wechseln Sie den Tag oder die Woche. Bild auf und Bild ab wechseln den Monat, zusammen mit der Umschalttaste das Jahr. Die Eingabetaste wählt das Datum aus.",
     "clear": "Löschen",
     "today": "Heute",
     "prev_month": "Vorheriger Monat",
@@ -134,6 +144,7 @@
     "decrease": "Verringern"
   },
   "editor": {
+    "error_start_date": "Wählen Sie ein Startdatum aus",
     "new_title": "Neue Erinnerung",
     "edit_title": "Erinnerung bearbeiten",
     "title_label": "Titel",
@@ -236,6 +247,7 @@
     "quit": "Beenden"
   },
   "msg": {
+    "action_failed": "Aktion fehlgeschlagen: {err}",
     "exported": "Exportierte Erinnerungen: {n}",
     "imported": "Importierte Erinnerungen: {n}",
     "export_failed": "Export fehlgeschlagen: {err}",

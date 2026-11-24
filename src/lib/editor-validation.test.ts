@@ -3,6 +3,7 @@ import { validateReminderDraft } from "./editor-validation";
 
 const valid: Parameters<typeof validateReminderDraft>[0] = {
   title: "Reminder",
+  startDate: "2026-10-15",
   recurrence: { type: "once" },
   endType: "never",
   endDate: "",
@@ -38,12 +39,21 @@ describe("validateReminderDraft", () => {
     expect(validateReminderDraft({ ...valid, recurrence: { type: "monthly", days: [15] } })).toBe("");
   });
 
+  it("requires a start date", () => {
+    expect(validateReminderDraft({ ...valid, startDate: "" })).toBe("editor.error_start_date");
+  });
+
+  it("ignores hidden end rules for a one-shot reminder", () => {
+    expect(validateReminderDraft({ ...valid, endType: "until" })).toBe("");
+  });
+
   it("requires an end date only for the until mode", () => {
-    expect(validateReminderDraft({ ...valid, endType: "until" })).toBe("editor.error_date");
-    expect(validateReminderDraft({ ...valid, endType: "until", endDate: "15.10.2026" })).toBe(
+    const recurring = { ...valid, recurrence: { type: "daily" } as const };
+    expect(validateReminderDraft({ ...recurring, endType: "until" })).toBe("editor.error_date");
+    expect(validateReminderDraft({ ...recurring, endType: "until", endDate: "15.10.2026" })).toBe(
       "editor.error_date",
     );
-    expect(validateReminderDraft({ ...valid, endType: "until", endDate: "2026-10-15" })).toBe("");
-    expect(validateReminderDraft({ ...valid, endType: "afterCount" })).toBe("");
+    expect(validateReminderDraft({ ...recurring, endType: "until", endDate: "2026-10-15" })).toBe("");
+    expect(validateReminderDraft({ ...recurring, endType: "afterCount" })).toBe("");
   });
 });

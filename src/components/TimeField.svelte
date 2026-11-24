@@ -1,14 +1,16 @@
 <script lang="ts">
   import Clock from "@lucide/svelte/icons/clock";
-  import { untrack } from "svelte";
+  import { tick, untrack } from "svelte";
   import { t } from "../lib/i18n.svelte";
   import { floatingPanel } from "../lib/floating-panel";
+  import { watchFloatingPopup } from "../lib/floating-popup";
 
   let {
     value = $bindable(""),
     ariaLabel = "",
   }: { value?: string; ariaLabel?: string } = $props();
 
+  const id = $props.id();
   const WIDTH = 260;
 
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -48,19 +50,25 @@
 
   function close() {
     open = false;
-    trigger?.focus();
+    trigger?.focus({ preventScroll: true });
   }
 
-  function show() {
+  async function show() {
     open = true;
+    await tick();
+    place();
+    await tick();
+    popover?.querySelector("input")?.focus();
   }
 
   function setHours(next: number) {
-    value = `${pad(clamp(next, 23))}:${pad(minutes)}`;
+    hours = clamp(next, 23);
+    value = `${pad(hours)}:${pad(minutes)}`;
   }
 
   function setMinutes(next: number) {
-    value = `${pad(hours)}:${pad(clamp(next, 59))}`;
+    minutes = clamp(next, 59);
+    value = `${pad(hours)}:${pad(minutes)}`;
   }
 
   /** The popover is position: fixed, so the editor's scroll container cannot clip it. */
@@ -70,7 +78,7 @@
     const rect = trigger.getBoundingClientRect();
     const fitted = floatingPanel(
       { left: rect.left, top: rect.top, bottom: rect.bottom, width: Math.min(WIDTH, window.innerWidth - 16) },
-      popover?.offsetHeight ?? 200,
+      popover?.scrollHeight ?? 200,
       window.innerWidth,
       window.innerHeight,
     );
@@ -78,52 +86,17 @@
     pos = { ...fitted, maxHeight: Math.min(400, fitted.maxHeight) };
   }
 
-  // Enter commits a digit by leaving the field; it must not submit the editor's
-  // form.
-  function commitDigit(event: KeyboardEvent) {
+  // Enter commits the time and returns to the trigger without submitting the form.
+  function acceptTime(event: KeyboardEvent) {
     if (event.key !== "Enter") return;
 
     event.preventDefault();
-    (event.currentTarget as HTMLInputElement).blur();
+    close();
   }
 
   $effect(() => {
-    if (!open || !popover) return;
-
-    place();
-    const frame = requestAnimationFrame(place);
-
-    const onPointerDown = (event: PointerEvent) => {
-      if (!root?.contains(event.target as Node)) open = false;
-    };
-    const onScroll = (event: Event) => {
-      const target = event.target;
-
-      if (target instanceof Node && root?.contains(target)) return;
-
-      open = false;
-    };
-    const onKeydown = (event: KeyboardEvent) => {
-      // Only the popover closes: the editor also listens for Escape.
-      if (event.key !== "Escape") return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      close();
-    };
-
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeydown, true);
-    window.addEventListener("scroll", onScroll, true);
-    window.addEventListener("resize", onScroll);
-
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKeydown, true);
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", onScroll);
-    };
+    if (!open || !root) return;
+    return watchFloatingPopup(root, () => (open = false), close, place);
   });
 </script>
 
@@ -132,7 +105,8 @@
     type="button"
     class="time-trigger"
     bind:this={trigger}
-    aria-label={ariaLabel}
+    aria-label={`${ariaLabel}: ${label}`}
+    aria-controls={open ? id : undefined}
     aria-haspopup="dialog"
     aria-expanded={open}
     onclick={() => (open ? close() : show())}
@@ -144,6 +118,7 @@
   {#if open}
     <div
       class="time-popover"
+      {id}
       bind:this={popover}
       role="dialog"
       aria-label={ariaLabel}
@@ -158,17 +133,23 @@
           inputmode="numeric"
           aria-label={t("units.hours")}
           value={pad(hours)}
-          onchange={(event) => setHours(Number.parseInt(event.currentTarget.value, 10) || 0)}
-          onkeydown={commitDigit}
+          onchange={(event) => {
+            setHours(Number.parseInt(event.currentTarget.value, 10) || 0);
+            event.currentTarget.value = pad(hours);
+          }}
+          onkeydown={acceptTime}
         />
-        <span class="time-separator">:</span>
+        <span class="time-separator" aria-hidden="true">:</span>
         <input
           class="time-digit"
           inputmode="numeric"
           aria-label={t("units.minutes")}
           value={pad(minutes)}
-          onchange={(event) => setMinutes(Number.parseInt(event.currentTarget.value, 10) || 0)}
-          onkeydown={commitDigit}
+          onchange={(event) => {
+            setMinutes(Number.parseInt(event.currentTarget.value, 10) || 0);
+            event.currentTarget.value = pad(minutes);
+          }}
+          onkeydown={acceptTime}
         />
       </div>
 
@@ -182,6 +163,7 @@
           value={hours}
           style:--fill={hoursFill}
           oninput={(event) => setHours(Number(event.currentTarget.value))}
+          onkeydown={acceptTime}
         />
       </label>
 
@@ -195,8 +177,11 @@
           value={minutes}
           style:--fill={minutesFill}
           oninput={(event) => setMinutes(Number(event.currentTarget.value))}
+          onkeydown={acceptTime}
         />
       </label>
+
+      <button class="time-close" type="button" onclick={close}>{t("settings.close")}</button>
     </div>
   {/if}
 </div>
@@ -233,7 +218,6 @@
   .time-trigger:focus-visible {
     border-color: var(--accent);
     box-shadow: 0 0 0 2px var(--accent-soft);
-    outline: none;
   }
 
   .time-trigger :global(svg) {
@@ -276,7 +260,6 @@
     font-size: 24px;
     line-height: 28px;
     text-align: center;
-    outline: none;
   }
 
   .time-digit:focus {
@@ -309,8 +292,13 @@
     border: 0;
     border-radius: 2px;
     background: linear-gradient(90deg, var(--accent) var(--fill), var(--panel-2) var(--fill));
-    outline: none;
     cursor: pointer;
+  }
+
+  .time-close {
+    display: block;
+    margin-block-start: 14px;
+    margin-inline-start: auto;
   }
 
   .time-slider::-webkit-slider-runnable-track {

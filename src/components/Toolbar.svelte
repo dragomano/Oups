@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount, tick, type Snippet } from "svelte";
   import { SEARCH_MIN_WIDTH, chooseToolbarLayout } from "../lib/toolbar-layout";
-  import type { View } from "../lib/api";
   import { t } from "../lib/i18n.svelte";
   import ArrowDownToLine from "@lucide/svelte/icons/arrow-down-to-line";
   import ArrowUpFromLine from "@lucide/svelte/icons/arrow-up-from-line";
@@ -44,12 +43,19 @@
   }
 
   onMount(() => {
-    const observer = new ResizeObserver(measure);
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(measure);
+    });
     observer.observe(bar);
     observer.observe(probe);
     document.fonts.ready.then(measure);
     measure();
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
   });
 
   $effect(() => {
@@ -64,7 +70,7 @@
      the title strip above, so this row holds only what the app does. -->
 {#snippet controls()}
   <button class="primary new-btn" onclick={onNew} title={t("toolbar.new")} aria-label={t("toolbar.new")}>
-    <Plus size={16} /><span class="label">{t("toolbar.new")}</span>
+    <Plus size={16} aria-hidden="true" /><span class="label">{t("toolbar.new")}</span>
   </button>
 
   <input
@@ -77,22 +83,22 @@
 
   <div class="io-group">
     <button class="io" onclick={onImport} title={t("toolbar.import")} aria-label={t("toolbar.import")}>
-      <ArrowDownToLine size={16} />
+      <ArrowDownToLine size={16} aria-hidden="true" />
       <span class="label">{t("toolbar.import")}</span>
     </button>
     <button class="io" onclick={onExport} title={t("toolbar.export")} aria-label={t("toolbar.export")}>
-      <ArrowUpFromLine size={16} />
+      <ArrowUpFromLine size={16} aria-hidden="true" />
       <span class="label">{t("toolbar.export")}</span>
     </button>
   </div>
 
-  <button class="icon icon-settings" onclick={onSettings} title={t("toolbar.settings")} aria-label={t("toolbar.settings")}><Settings size={16} /></button>
+  <button class="icon icon-settings" onclick={onSettings} title={t("toolbar.settings")} aria-label={t("toolbar.settings")}><Settings size={16} aria-hidden="true" /></button>
 {/snippet}
 
-<header class="toolbar" class:search-below={layout.searchOwnRow}
+<div class="toolbar" role="group" aria-label={t("a11y.actions")} class:search-below={layout.searchOwnRow}
   class:hide-new={!layout.newLabel} class:hide-io={!layout.ioLabels} bind:this={bar}>
   {@render controls()}
-</header>
+</div>
 <div class="probe" bind:this={probe} inert aria-hidden="true">
   {@render controls()}
 </div>

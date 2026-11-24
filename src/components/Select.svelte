@@ -1,23 +1,29 @@
 <script lang="ts">
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
-  import { tick } from "svelte";
+  import { type Snippet, tick } from "svelte";
   import { floatingPanel } from "../lib/floating-panel";
 
-  type Option = { value: string; label: string };
+  type Option = { value: string; label: string; description?: string; lang?: string };
 
   let {
     options = [],
     value = $bindable(""),
-    ariaLabel = "",
+    ariaLabel,
     onchange,
+    presentation = "default",
+    content,
   }: {
     options?: Option[];
     value?: string;
-    ariaLabel?: string;
+    ariaLabel: string;
     onchange?: (value: string) => void;
+    presentation?: "default" | "priority";
+    content?: Snippet<[Option, boolean]>;
   } = $props();
 
-  const MENU_MAX = 288;
+  const id = $props.id();
+  const menuMax = $derived(presentation === "priority" ? 260 : 288);
+  const optionId = (index: number) => `${id}-option-${index}`;
 
   let open = $state(false);
   let cursor = $state(0);
@@ -27,7 +33,7 @@
 
   // The menu is position: fixed and measured from the trigger, so the editor's
   // scroll container cannot clip it.
-  let pos = $state({ top: 0, left: 0, width: 0, maxHeight: MENU_MAX });
+  let pos = $state({ top: 0, left: 0, width: 0, maxHeight: 288 });
 
   const current = $derived(options.find((option) => option.value === value) ?? { value, label: value });
 
@@ -36,12 +42,12 @@
 
     const fitted = floatingPanel(
       trigger.getBoundingClientRect(),
-      menu?.offsetHeight ?? 0,
+      menu?.scrollHeight ?? 0,
       window.innerWidth,
       window.innerHeight,
     );
 
-    pos = { ...fitted, maxHeight: Math.min(MENU_MAX, fitted.maxHeight) };
+    pos = { ...fitted, maxHeight: Math.min(menuMax, fitted.maxHeight) };
   }
 
   function revealCursor() {
@@ -49,16 +55,19 @@
   }
 
   async function show() {
+    if (!options.length) return;
+    trigger?.focus({ preventScroll: true });
     cursor = Math.max(0, options.findIndex((option) => option.value === value));
     open = true;
     await tick();
     place();
+    await tick();
     revealCursor();
   }
 
   function close() {
     open = false;
-    trigger?.focus();
+    trigger?.focus({ preventScroll: true });
   }
 
   function choose(next: string) {
@@ -73,6 +82,8 @@
   }
 
   function onkeydown(event: KeyboardEvent) {
+    if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing) return;
+
     if (!open) {
       if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Enter" || event.key === " ") {
         event.preventDefault();
@@ -110,7 +121,8 @@
       event.stopPropagation();
       close();
     } else if (event.key === "Tab") {
-      open = false;
+      const option = options[cursor];
+      if (option) choose(option.value);
     }
   }
 
@@ -120,40 +132,41 @@
     const onPointerDown = (event: PointerEvent) => {
       if (!root?.contains(event.target as Node)) open = false;
     };
-    const onScroll = (event: Event) => {
-      // A scroll inside the open menu itself (the month list is taller than its
-      // panel) must not close the menu; only scrolling the page/editor should.
-      const target = event.target;
-
-      if (target instanceof Node && root?.contains(target)) return;
-
-      open = false;
-    };
-
     document.addEventListener("pointerdown", onPointerDown);
-    window.addEventListener("scroll", onScroll, true);
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("scroll", place, true);
+    window.addEventListener("resize", place);
 
     return () => {
       document.removeEventListener("pointerdown", onPointerDown);
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("resize", place);
     };
   });
 </script>
 
-<div class="select" bind:this={root}>
+<div class="select" class:priority={presentation === "priority"} bind:this={root}>
   <button
     type="button"
     class="select-trigger"
+    class:picker-btn={presentation === "priority"}
+    role="combobox"
+    disabled={!options.length}
     bind:this={trigger}
     aria-label={ariaLabel}
+    aria-controls={open ? id : undefined}
+    aria-activedescendant={open && options[cursor] ? optionId(cursor) : undefined}
     aria-haspopup="listbox"
     aria-expanded={open}
     onclick={toggle}
+    onblur={() => (open = false)}
     onkeydown={onkeydown}
   >
-    <span class="select-value">{current.label}</span>
+    {#if content}
+      <span class="sr-only" lang={current.lang}>{current.label}</span>
+      {@render content(current, false)}
+    {:else}
+      <span class="select-value" lang={current.lang}>{current.label}</span>
+    {/if}
     <span class="select-chevron" class:open={open}>
       <ChevronDown size={16} aria-hidden="true" />
     </span>
@@ -161,7 +174,9 @@
 
   {#if open}
     <div
+      {id}
       class="select-menu"
+      class:picker-menu={presentation === "priority"}
       role="listbox"
       aria-label={ariaLabel}
       bind:this={menu}
@@ -174,14 +189,27 @@
         <button
           type="button"
           role="option"
+          id={optionId(index)}
           data-index={index}
+          tabindex="-1"
+          lang={option.lang}
+          aria-label={option.label}
+          aria-describedby={option.description ? `${optionId(index)}-description` : undefined}
           class="select-option"
           class:active={index === cursor}
           aria-selected={option.value === value}
+          onmousedown={(event) => event.preventDefault()}
           onclick={() => choose(option.value)}
           onmouseenter={() => (cursor = index)}
         >
-          <span>{option.label}</span>
+          {#if content}
+            {@render content(option, true)}
+            {#if option.description}
+              <span class="sr-only" id={`${optionId(index)}-description`}>{option.description}</span>
+            {/if}
+          {:else}
+            <span>{option.label}</span>
+          {/if}
           {#if option.value === value}<span class="select-check" aria-hidden="true">✓</span>{/if}
         </button>
       {/each}
@@ -221,7 +249,6 @@
   .select-trigger:focus-visible {
     border-color: var(--accent);
     box-shadow: 0 0 0 2px var(--accent-soft);
-    outline: none;
   }
 
   .select-trigger :global(svg) {
@@ -281,13 +308,19 @@
 
   .select-option.active {
     background: var(--accent-soft);
-    color: var(--accent);
+    color: var(--text);
   }
 
-  .select-option:focus-visible {
-    outline: 2px solid var(--accent);
+  .priority .select-trigger { justify-content: flex-start; gap: 10px; padding: 7px 11px; }
+  .priority .select-menu { border-radius: 10px; }
+  .priority .select-option { justify-content: flex-start; gap: 10px; padding: 7px 9px; border-radius: 7px; }
+  .priority .select-option.active { background: var(--panel-2); }
+  .priority .select-option[aria-selected="true"] { background: var(--accent-soft); }
+  .select-option.active {
+    outline: 1px solid var(--text);
     outline-offset: -2px;
   }
+  .priority .select-check { margin-inline-start: auto; }
 
   .select-check {
     flex: none;
@@ -297,15 +330,11 @@
 
   /* The highlighted and selected rows are accent-tinted in both themes; their
      text and check need full contrast on a dark panel. */
-  :global(:root[data-theme="dark"]) .select-option.active,
-  :global(:root[data-theme="dark"]) .select-option[aria-selected="true"],
   :global(:root[data-theme="dark"]) .select-check {
     color: var(--accent-text);
   }
 
   @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme="light"])) .select-option.active,
-    :global(:root:not([data-theme="light"])) .select-option[aria-selected="true"],
     :global(:root:not([data-theme="light"])) .select-check {
       color: var(--accent-text);
     }

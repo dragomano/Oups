@@ -124,26 +124,26 @@
   {:else if rec.type === "monthly"}
     <MonthDayPicker bind:days={rec.days} count={monthDayCount} />
   {:else if rec.type === "yearly"}
-    <label class="inline">
+    <div class="inline">
       <span>{t("editor.month")}</span>
       <Select value={String(rec.month)} onchange={setMonth} options={monthOptions} ariaLabel={t("editor.month")} />
-    </label>
-    <label class="inline">
+    </div>
+    <div class="inline">
       <span>{t("editor.day")}</span>
       <NumberField bind:value={rec.day} min={1} max={31} ariaLabel={t("editor.day")} />
-    </label>
+    </div>
   {:else if rec.type === "interval"}
     {@const n = rec.n || 1}
-    <label class="inline">
+    <div class="inline">
       <span>{everyPrefix(rec.unit, n)}</span>
-      <NumberField bind:value={rec.n} min={1} ariaLabel={t("editor.every")} />
+      <NumberField bind:value={rec.n} min={1} ariaLabel={t("a11y.interval_count")} />
       <Select
         value={rec.unit}
         onchange={setUnit}
         options={units.map((u) => ({ value: u, label: formatUnit(u, n) }))}
-        ariaLabel={t("rec.interval")}
+        ariaLabel={t("popup.snooze_unit")}
       />
-    </label>
+    </div>
   {/if}
 </div>
 

@@ -9,8 +9,9 @@ export async function loadLocale(lang: string) {
   try {
     const dict = await api.getLocale(lang);
     i18n.dict = dict ?? {};
-    i18n.lang = lang;
-    document.documentElement.lang = lang;
+    const code = meta()?.code;
+    i18n.lang = typeof code === "string" && code ? code : lang;
+    document.documentElement.lang = i18n.lang;
     // Text direction is declared by the locale file itself, so a
     // right-to-left language needs no code of its own.
     document.documentElement.dir = localeDir();

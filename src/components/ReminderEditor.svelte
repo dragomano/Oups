@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, untrack } from "svelte";
+  import { onMount, tick, untrack } from "svelte";
   import Trash2 from "@lucide/svelte/icons/trash-2";
   import X from "@lucide/svelte/icons/x";
   import RecurrencePicker from "./RecurrencePicker.svelte";
@@ -46,8 +46,13 @@
   $effect(() => {
     if (!endDatePicked) endDate = dateStr ? addDays(dateStr, 1) : "";
   });
+  const id = $props.id();
+  let form: HTMLFormElement;
   let error = $state("");
   const titleError = $derived(error === "editor.error_title");
+  const startDateError = $derived(error === "editor.error_start_date");
+  const endDateError = $derived(error === "editor.error_date");
+  const dialogTitle = $derived(t(isNew ? "editor.new_title" : "editor.edit_title"));
   const endTypes = $derived([
     { value: "never", label: t("end.never") },
     { value: "afterCount", label: t("end.after") },
@@ -55,7 +60,10 @@
   ]);
 
   function setEndType(next: string) {
-    if (next === "never" || next === "afterCount" || next === "until") endType = next;
+    if (next === "never" || next === "afterCount" || next === "until") {
+      endType = next;
+      if (endDateError && next !== "until") error = "";
+    }
   }
   let titleInput: HTMLInputElement | undefined;
   let saving = $state(false);
@@ -74,10 +82,11 @@
 
   async function save() {
     if (saving) return;
-    error = validateReminderDraft({ title, recurrence: rec, endType, endDate });
+    error = validateReminderDraft({ title, startDate: dateStr, recurrence: rec, endType, endDate });
 
     if (error) {
-      if (titleError) titleInput?.focus();
+      await tick();
+      form.querySelector<HTMLElement>('[aria-invalid="true"][aria-describedby], [data-invalid], .editor-error')?.focus();
       return;
     }
 
@@ -114,8 +123,7 @@
       await api.upsertReminder(built);
       onClose();
     } catch (e) {
-      console.error(e);
-      error = String(e);
+      alert(t("msg.action_failed", { err: String(e) }));
     } finally {
       saving = false;
     }
@@ -124,8 +132,12 @@
   async function del() {
     if (!src) return;
     if (confirm(t("msg.delete_confirm"))) {
-      await api.deleteReminder(src.id);
-      onClose();
+      try {
+        await api.deleteReminder(src.id);
+        onClose();
+      } catch (error) {
+        alert(t("msg.action_failed", { err: String(error) }));
+      }
     }
   }
 
@@ -136,10 +148,13 @@
   onMount(() => titleInput?.focus({ preventScroll: true }));
 </script>
 
-<form class="dialog reminder-editor" novalidate aria-label={t(isNew ? "editor.new_title" : "editor.edit_title")} onsubmit={(event) => { event.preventDefault(); void save(); }}>
+<svelte:head><title>{dialogTitle}</title></svelte:head>
+
+<div role="dialog" aria-modal="true" aria-label={dialogTitle}>
+<form class="dialog reminder-editor" bind:this={form} novalidate onsubmit={(event) => { event.preventDefault(); void save(); }}>
   {#if !nativeFrame}
     <header class="editor-head" data-tauri-drag-region>
-      <h2 data-tauri-drag-region>{isNew ? t("editor.new_title") : t("editor.edit_title")}</h2>
+      <h1 data-tauri-drag-region>{dialogTitle}</h1>
       <button class="icon close editor-close" type="button" onclick={onClose} aria-label={t("settings.close")}>
         <X size={16} aria-hidden="true" />
       </button>
@@ -147,36 +162,40 @@
   {/if}
   <div class="editor-content">
     <div class="editor-form">
-    <label class="field">
-      <span>{t("editor.title_label")}</span>
+    <div class="field">
+      <label for={id}>{t("editor.title_label")}</label>
       <input
         type="text"
         bind:this={titleInput}
         bind:value={title}
         placeholder={t("editor.title_placeholder")}
-        aria-label={t("editor.title_label")}
+        {id}
+        required
         aria-invalid={titleError || undefined}
-        aria-describedby={titleError ? "title-error" : undefined}
+        aria-describedby={titleError ? `${id}-title-error` : undefined}
         oninput={(event) => {
           if (titleError && event.currentTarget.value.trim()) error = "";
         }}
       />
       {#if titleError}
-        <span class="error" id="title-error" role="alert">{t("editor.error_title")}</span>
+        <span class="error" id={`${id}-title-error`} role="alert">{t("editor.error_title")}</span>
       {/if}
-    </label>
+    </div>
 
     <div class="editor-columns">
       <div class="editor-main">
     <label class="field">
       <span>{t("editor.note_label")}</span>
-      <textarea rows="2" bind:value={note} placeholder={t("editor.note_placeholder")} aria-label={t("editor.note_label")}></textarea>
+      <textarea rows="2" bind:value={note} placeholder={t("editor.note_placeholder")}></textarea>
     </label>
 
     <div class="grid2">
       <div class="field">
         <span>{t("editor.date_label")}</span>
-        <DateField bind:value={dateStr} min={isNew ? todayStr() : undefined} ariaLabel={t("editor.date_label")} />
+        <DateField bind:value={dateStr} min={isNew ? todayStr() : undefined} ariaLabel={t("editor.date_label")}
+          ariaDescribedBy={startDateError ? `${id}-start-error` : undefined}
+          onchange={() => { if (startDateError && dateStr) error = ""; }} />
+        {#if startDateError}<span class="error" id={`${id}-start-error`}>{t(error)}</span>{/if}
       </div>
       <div class="field">
         <span>{t("editor.time_label")}</span>
@@ -184,9 +203,7 @@
       </div>
     </div>
 
-    {#if pastStart}
-      <div class="hint">{t("editor.hint_past_start")}</div>
-    {/if}
+    <div class="hint" role="status">{pastStart ? t("editor.hint_past_start") : ""}</div>
 
     <div class="field">
       <span>{t("editor.priority_label")}</span>
@@ -211,39 +228,37 @@
           {:else if endType === "until"}
             <DateField
               bind:value={endDate}
-              onchange={() => (endDatePicked = true)}
+              onchange={() => { endDatePicked = true; if (endDateError && endDate) error = ""; }}
               ariaLabel={t("end.until")}
+              ariaDescribedBy={endDateError ? `${id}-end-error` : undefined}
             />
           {/if}
         </div>
-        {#if endBeforeStart || countUsedUp}
-          <div class="hint">
-            {t(endBeforeStart ? "editor.hint_end_before_start" : "editor.hint_count_used_up")}
-          </div>
-        {/if}
+        {#if endDateError}<span class="error" id={`${id}-end-error`}>{t(error)}</span>{/if}
+        <div class="hint" role="status">{endBeforeStart || countUsedUp
+          ? t(endBeforeStart ? "editor.hint_end_before_start" : "editor.hint_count_used_up") : ""}</div>
       </div>
     {/if}
 
       </div>
     </div>
 
-    {#if error && !titleError}
-      <div class="error">
-        {error.startsWith("editor.") || error.startsWith("end.") ? t(error) : error}
-      </div>
+    {#if error && !titleError && !startDateError && !endDateError}
+      <div class="error editor-error" tabindex="-1">{t(error)}</div>
     {/if}
 
     </div>
   </div>
     <div class="footer">
       {#if !isNew}
-        <button type="button" class="danger delete" onclick={del} aria-label={t("editor.delete")}><Trash2 size={16} /><span>{t("editor.delete")}</span></button>
+        <button type="button" class="danger delete" onclick={del} aria-label={t("editor.delete")}><Trash2 size={16} aria-hidden="true" /><span>{t("editor.delete")}</span></button>
       {/if}
       <span class="spacer"></span>
       <button type="button" onclick={onClose} aria-label={t("editor.cancel")}>{t("editor.cancel")}</button>
       <button type="submit" class="primary" disabled={saving} aria-label={t("editor.save")}>{t("editor.save")}</button>
     </div>
 </form>
+</div>
 
 <svelte:window onkeydown={onKeydown} />
 
@@ -284,7 +299,7 @@
     padding: 18px 24px 22px;
   }
 
-  h2 {
+  h1 {
     margin: 0;
     font-size: 18px;
   }
@@ -310,6 +325,7 @@
     min-width: 0;
   }
 
+  .field > label,
   .field > span {
     color: var(--muted);
     font-size: 13px;
@@ -347,6 +363,7 @@
   .field > .error { color: var(--danger); font-size: 13px; line-height: 1.35; }
   input[aria-invalid="true"] { border-color: var(--danger); }
   input[aria-invalid="true"]:focus { box-shadow: 0 0 0 2px var(--danger-soft); }
+  .hint:empty { position: absolute; }
   .hint { color: var(--muted); font-size: 13px; line-height: 1.35; }
 
   .footer {

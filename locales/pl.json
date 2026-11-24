@@ -17,6 +17,14 @@
     "matrix": "Macierz Eisenhowera",
     "editor": "Edytor przypomnienia"
   },
+  "a11y": {
+    "views": "Widoki przypomnień",
+    "actions": "Działania dotyczące przypomnień",
+    "loading": "Wczytywanie przypomnień",
+    "results": "Znalezione przypomnienia: {n}",
+    "reminder_enabled": "Przypomnienie włączone",
+    "interval_count": "Interwał powtarzania"
+  },
   "toolbar": {
     "new": "Nowe przypomnienie",
     "search": "Szukaj przypomnień…",
@@ -126,6 +134,8 @@
     "until": "Do daty"
   },
   "date": {
+    "empty": "Nie wybrano daty",
+    "navigation": "Strzałki przechodzą między dniami i tygodniami, Page Up i Page Down zmieniają miesiąc, a z klawiszem Shift — rok. Naciśnij Enter, aby wybrać datę.",
     "clear": "Wyczyść",
     "today": "Dziś",
     "prev_month": "Poprzedni miesiąc",
@@ -136,6 +146,7 @@
     "decrease": "Zmniejsz"
   },
   "editor": {
+    "error_start_date": "Wybierz datę rozpoczęcia",
     "new_title": "Nowe przypomnienie",
     "edit_title": "Edytuj przypomnienie",
     "title_label": "Tytuł",
@@ -238,6 +249,7 @@
     "quit": "Zakończ"
   },
   "msg": {
+    "action_failed": "Nie udało się wykonać działania: {err}",
     "exported": "Wyeksportowane przypomnienia: {n}",
     "imported": "Zaimportowane przypomnienia: {n}",
     "export_failed": "Eksport nie powiódł się: {err}",

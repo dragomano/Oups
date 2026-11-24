@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
   import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
   import { api, type PopupData, type Reminder, type SnoozeUnit } from "./lib/api";
   import { loadLocale, t } from "./lib/i18n.svelte";
@@ -11,6 +11,10 @@
   import NumberField from "./components/NumberField.svelte";
   import Select from "./components/Select.svelte";
 
+  const id = $props.id();
+  let heading = $state<HTMLHeadingElement>();
+  let missedList = $state<HTMLUListElement>();
+  let pending = $state(false);
   let data = $state<PopupData | null>(null);
   let list = $state<Reminder[]>([]);
 
@@ -29,6 +33,8 @@
 
     // The window is created hidden; reveal it once the content is rendered,
     // so no blank WebView frame flashes.
+    await tick();
+    heading?.focus({ preventScroll: true });
     void api.popupWindowReady();
   });
 
@@ -37,35 +43,56 @@
   }
 
   async function applyChoice() {
-    if (!isValidSnoozeCount(delayCount)) return;
-
-    if (data?.kind === "single") await api.snooze(data.reminder.id, delayCount, delayUnit);
-    else if (data?.kind === "missed") await api.snoozeMissedAll(delayCount, delayUnit);
-    else return;
-
-    closeSelf();
+    if (!isValidSnoozeCount(delayCount) || pending || !data) return;
+    pending = true;
+    try {
+      if (data.kind === "single") await api.snooze(data.reminder.id, delayCount, delayUnit);
+      else await api.snoozeMissedAll(delayCount, delayUnit);
+      closeSelf();
+    } catch (error) {
+      alert(t("msg.action_failed", { err: String(error) }));
+    } finally {
+      pending = false;
+    }
   }
 
-  async function dismissOne(id: string) {
-    list = list.filter((r) => r.id !== id);
-    await api.dismissMissedOne(id);
+  async function dismissOne(reminderId: string, button: HTMLButtonElement) {
+    try {
+      await api.dismissMissedOne(reminderId);
+      const index = list.findIndex((reminder) => reminder.id === reminderId);
+      const restoreFocus = document.activeElement === button;
+      list = list.filter((reminder) => reminder.id !== reminderId);
+      if (restoreFocus && list.length) {
+        await tick();
+        if (document.activeElement === document.body) {
+          missedList?.querySelectorAll("button")[Math.min(index, list.length - 1)]?.focus();
+        }
+      }
+    } catch (error) {
+      alert(t("msg.action_failed", { err: String(error) }));
+    }
   }
 
   async function dismissAll() {
-    await api.dismissMissed();
-    closeSelf();
+    try {
+      await api.dismissMissed();
+      closeSelf();
+    } catch (error) {
+      alert(t("msg.action_failed", { err: String(error) }));
+    }
   }
 
   function onKeydown(e: KeyboardEvent) {
-    if (e.key === "Escape") {
+    if (e.key === "Escape" && !e.defaultPrevented) {
       if (data?.kind === "single") closeSelf();
       else if (data?.kind === "missed") dismissAll();
     }
   }
 
-  const single = $derived(data?.kind === "single" ? (data as { reminder: Reminder }).reminder : null);
+  const single = $derived(data?.kind === "single" ? data.reminder : null);
   const isMissed = $derived(data?.kind === "missed");
 
+  const title = $derived(data ? (single?.title ?? t("popup.missed_title")) : "");
   const start = $derived(single ? parseLocal(single.startAt) : null);
 
   // High and Critical both mark the popup as important; Critical is the level
@@ -74,6 +101,7 @@
   const isHigh = $derived(single?.priority === "high" || single?.priority === "critical");
 </script>
 
+<svelte:head><title>{title}</title></svelte:head>
 <svelte:window onkeydown={onKeydown} />
 
 <!-- Keep the delay controls compact; the unit menu opens outside the layout. -->
@@ -81,17 +109,17 @@
   <div class="actions">
     <form class="delay-form" onsubmit={(event) => { event.preventDefault(); void applyChoice(); }}>
       <div class="delay-row">
-        <NumberField bind:value={delayCount} min={SNOOZE_MIN} max={SNOOZE_MAX} ariaLabel={t("popup.snooze_count")} />
+        <NumberField bind:value={delayCount} min={SNOOZE_MIN} max={SNOOZE_MAX} ariaLabel={t("popup.snooze_count")} ariaDescribedBy={!validDelay ? `${id}-delay-error` : undefined} />
         <Select
           value={delayUnit}
           onchange={(unit) => (delayUnit = unit as SnoozeUnit)}
           options={SNOOZE_UNITS.map((unit) => ({ value: unit, label: snoozeUnitLabel(unit, delayCount) }))}
           ariaLabel={t("popup.snooze_unit")}
         />
-        <button type="submit" class="primary" disabled={!validDelay} aria-label={applyLabel}>{applyLabel}</button>
+        <button type="submit" class="primary" disabled={!validDelay || pending} aria-label={applyLabel}>{applyLabel}</button>
       </div>
       {#if !validDelay}
-        <p class="delay-error" role="alert">{t("popup.snooze_range", { min: SNOOZE_MIN, max: SNOOZE_MAX })}</p>
+        <p class="delay-error" id={`${id}-delay-error`} role="alert">{t("popup.snooze_range", { min: SNOOZE_MIN, max: SNOOZE_MAX })}</p>
       {/if}
     </form>
     <button onclick={onClose} aria-label={closeLabel}>{closeLabel}</button>
@@ -99,13 +127,13 @@
 {/snippet}
 
 {#if single}
-  <div class="wrap" class:high={isHigh && !isCritical} class:critical={isCritical}>
+  <main class="wrap" class:high={isHigh && !isCritical} class:critical={isCritical}>
     {#if isCritical}
-      <div class="badge danger">{t("priority.badge.critical")}</div>
+      <div class="badge danger" id={`${id}-priority`}>{t("priority.badge.critical")}</div>
     {:else if isHigh}
-      <div class="badge warn">{t("priority.badge.high")}</div>
+      <div class="badge warn" id={`${id}-priority`}>{t("priority.badge.high")}</div>
     {/if}
-    <h1>{single.title}</h1>
+    <h1 bind:this={heading} tabindex="-1" aria-describedby={isHigh ? `${id}-priority` : undefined}>{title}</h1>
     {#if single.note}
       <p class="note">
         <NoteLinks note={single.note} />
@@ -117,15 +145,16 @@
     </div>
 
     {@render delayControls(t("popup.snooze"), t("popup.close"), closeSelf)}
-  </div>
+  </main>
 {:else if isMissed}
-  <div class="wrap">
-    <h1>{t("popup.missed_title")}</h1>
-    <ul class="missed-list">
+  <main class="wrap">
+    <h1 bind:this={heading} tabindex="-1">{title}</h1>
+    <ul class="missed-list" role="list" bind:this={missedList}>
       {#each list as r (r.id)}
+        {@const closeLabel = `${t("popup.close")}: ${r.title}`}
         <li>
           <div class="m-main">
-            <div class="m-title">{r.title}</div>
+            <h2 class="m-title">{r.title}</h2>
             {#if r.note}
               <div class="m-note">
                 <NoteLinks note={r.note} />
@@ -133,14 +162,15 @@
             {/if}
             <div class="m-time">{r.nextDue ? fmtDateTime(parseLocal(r.nextDue)!) : ""}</div>
           </div>
-          <button class="icon icon-close" title={t("popup.close")} aria-label={t("popup.close")} onclick={() => dismissOne(r.id)}><X size={16} /></button>
+          <button class="icon icon-close" title={closeLabel} aria-label={closeLabel}
+            onclick={(event) => void dismissOne(r.id, event.currentTarget)}><X size={16} aria-hidden="true" /></button>
         </li>
       {/each}
     </ul>
     {@render delayControls(t("popup.snooze_all"), t("popup.close_all"), dismissAll)}
-  </div>
+  </main>
 {:else}
-  <div class="wrap muted">…</div>
+  <div class="wrap muted" aria-hidden="true">…</div>
 {/if}
 
 <style>
@@ -152,6 +182,8 @@
     height: calc(100vh - 0px);
     overflow-y: auto;
   }
+
+  h1:focus { outline: none; }
 
   .wrap.high {
     border-top: 3px solid var(--warn);
@@ -287,6 +319,8 @@
   }
 
   .m-title {
+    margin: 0;
+    font-size: inherit;
     font-weight: 600;
   }
 

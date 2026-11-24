@@ -1,5 +1,6 @@
 <script lang="ts">
   import { api } from "../lib/api";
+  import { t } from "../lib/i18n.svelte";
   import { parseNoteLinks } from "../lib/links";
 
   let { note }: { note: string } = $props();
@@ -8,7 +9,7 @@
       never as navigation inside the app's webview. */
   function openLink(e: MouseEvent, url: string) {
     e.preventDefault();
-    api.openExternal(url).catch((err) => console.error("open_external failed:", err));
+    api.openExternal(url).catch((err) => alert(t("msg.action_failed", { err: String(err) })));
   }
 </script>
 
@@ -20,11 +21,9 @@
 
 <style>
   a {
-    color: var(--accent);
-    text-decoration: none;
-  }
-
-  a:hover {
+    color: inherit;
     text-decoration: underline;
   }
+
+  a:hover { text-decoration-thickness: 2px; }
 </style>
