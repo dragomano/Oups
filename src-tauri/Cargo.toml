@@ -40,6 +40,10 @@ sys-locale = "0.3"
 [target.'cfg(target_os = "windows")'.dependencies]
 window-vibrancy = "0.8"
 
+[target.'cfg(target_os = "linux")'.dependencies]
+# Already used by Tauri. Reapply popup placement once the X11 window is mapped.
+gtk = "0.18"
+
 [dev-dependencies]
 tauri-runtime = "2"
 

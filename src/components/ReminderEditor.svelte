@@ -15,9 +15,11 @@
 
   let {
     reminder = null,
+    nativeFrame = false,
     onClose,
   }: {
     reminder: Reminder | null;
+    nativeFrame?: boolean;
     onClose: () => void;
   } = $props();
 
@@ -135,12 +137,14 @@
 </script>
 
 <form class="dialog reminder-editor" novalidate aria-label={t(isNew ? "editor.new_title" : "editor.edit_title")} onsubmit={(event) => { event.preventDefault(); void save(); }}>
-  <header class="editor-head" data-tauri-drag-region>
-    <h2 data-tauri-drag-region>{isNew ? t("editor.new_title") : t("editor.edit_title")}</h2>
-    <button class="icon close editor-close" type="button" onclick={onClose} aria-label={t("settings.close")}>
-      <X size={16} aria-hidden="true" />
-    </button>
-  </header>
+  {#if !nativeFrame}
+    <header class="editor-head" data-tauri-drag-region>
+      <h2 data-tauri-drag-region>{isNew ? t("editor.new_title") : t("editor.edit_title")}</h2>
+      <button class="icon close editor-close" type="button" onclick={onClose} aria-label={t("settings.close")}>
+        <X size={16} aria-hidden="true" />
+      </button>
+    </header>
+  {/if}
   <div class="editor-content">
     <div class="editor-form">
     <label class="field">

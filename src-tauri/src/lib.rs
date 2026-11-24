@@ -3,6 +3,8 @@ mod commands;
 mod db;
 mod editor_window;
 mod identity;
+#[cfg(target_os = "linux")]
+mod linux_window;
 mod locale;
 mod modal_window;
 mod model;
@@ -29,7 +31,28 @@ use state::AppState;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Choose before Tauri initializes GTK. X11 (including XWayland) supports
+    // popup placement, and GDK can fall back to Wayland or honor GDK_BACKEND.
+    #[cfg(target_os = "linux")]
+    gtk::gdk::set_allowed_backends("x11,wayland,*");
+
     let context = tauri::generate_context!();
+    #[cfg(target_os = "linux")]
+    let context = {
+        // Only Windows needs a transparent main window for Mica. On Linux,
+        // keep GTK and WebKit on an opaque surface through window resizes.
+        let mut context = context;
+        if let Some(main) = context
+            .config_mut()
+            .app
+            .windows
+            .iter_mut()
+            .find(|window| window.label == "main")
+        {
+            main.transparent = false;
+        }
+        context
+    };
 
     tauri::Builder::default()
         .manage(editor_window::Draft::default())

@@ -5,7 +5,10 @@
   import ReminderEditor from "./components/ReminderEditor.svelte";
   import { api, type Reminder } from "./lib/api";
   import { loadLocale } from "./lib/i18n.svelte";
+  import { observeModalHeight, usesNativeModalFrame } from "./lib/modal-content";
   import { applyTheme } from "./lib/theme";
+
+  const nativeFrame = usesNativeModalFrame();
 
   let ready = $state(false);
   let reminder = $state<Reminder | null>(null);
@@ -30,30 +33,14 @@
     const footer = node.querySelector<HTMLElement>(".footer");
     const content = node.querySelector<HTMLElement>(".editor-content");
     const header = node.querySelector<HTMLElement>(".editor-head");
-    let lastHeight = 0;
-    let frame = 0;
-    function fit() {
-      if (!form || !footer) return;
+    return observeModalHeight([header, form, footer], api.fitEditorWindow, () => {
       if (content) node.style.setProperty("--editor-gutter", `${content.offsetWidth - content.clientWidth}px`);
-      const height = Math.ceil((header?.getBoundingClientRect().height ?? 0) + form.getBoundingClientRect().height + footer.getBoundingClientRect().height);
-      if (height === lastHeight) return;
-      lastHeight = height;
-      void api.fitEditorWindow(height).catch((error) => console.error("failed to fit editor window", error));
-    }
-    // Apply layout changes on the next frame, outside ResizeObserver delivery.
-    const observer = new ResizeObserver(() => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(fit);
     });
-    if (form) observer.observe(form);
-    if (footer) observer.observe(footer);
-    if (header) observer.observe(header);
-    return { destroy: () => { observer.disconnect(); cancelAnimationFrame(frame); } };
   }
 </script>
 
 {#if ready}
   <div class="editor-window" use:fitContent>
-    <ReminderEditor {reminder} onClose={() => void getCurrentWebviewWindow().close()} />
+    <ReminderEditor {reminder} {nativeFrame} onClose={() => void getCurrentWebviewWindow().close()} />
   </div>
 {/if}

@@ -67,6 +67,9 @@ pub async fn open_settings(app: AppHandle) -> Result<(), String> {
 
 /// Every window loads the same page; the frontend picks the component from the
 /// window label (see src/lib/window-role.ts).
+#[cfg(target_os = "linux")]
+const PAGE: &str = "index.html?native-frame";
+#[cfg(not(target_os = "linux"))]
 const PAGE: &str = "index.html";
 
 pub fn open(app: &AppHandle, label: &str, title: &str) -> Result<(), String> {
@@ -84,10 +87,10 @@ pub fn open(app: &AppHandle, label: &str, title: &str) -> Result<(), String> {
     let height = 600.0_f64.min((area.size.height as f64 / scale - 48.0).max(1.0));
     let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App(PAGE.into()))
         .title(title)
-        .decorations(false)
+        .decorations(cfg!(target_os = "linux"))
         .inner_size(width, height)
         .min_inner_size(280.0_f64.min(width), 240.0_f64.min(height))
-        .resizable(true)
+        .resizable(!cfg!(target_os = "linux"))
         .maximizable(false)
         .minimizable(false)
         .skip_taskbar(true)
@@ -98,9 +101,11 @@ pub fn open(app: &AppHandle, label: &str, title: &str) -> Result<(), String> {
     let builder = builder.owner(&main).map_err(|e| e.to_string())?;
     #[cfg(not(target_os = "windows"))]
     let builder = builder.parent(&main).map_err(|e| e.to_string())?;
-    builder.build().map_err(|e| e.to_string())?;
+    let window = builder.build().map_err(|e| e.to_string())?;
+    #[cfg(target_os = "linux")]
+    crate::linux_window::keep_windowed(&window);
     main.set_enabled(false).map_err(|e| e.to_string())?;
-    startup::fallback_reveal(app, label, startup::READY_FALLBACK);
+    startup::fallback_reveal(window.app_handle(), window.label(), startup::READY_FALLBACK);
     Ok(())
 }
 
@@ -174,6 +179,9 @@ pub fn fit(app: &AppHandle, label: &str, height: f64) -> Result<(), String> {
             outer.height.saturating_sub(inner.height) as f64 / scale,
         ),
     );
+    #[cfg(target_os = "linux")]
+    crate::linux_window::fit_modal(&window, size).map_err(|e| e.to_string())?;
+    #[cfg(not(target_os = "linux"))]
     window.set_size(size).map_err(|e| e.to_string())?;
     let visible = window.is_visible().map_err(|e| e.to_string())?;
     let outer = window.outer_size().map_err(|e| e.to_string())?;

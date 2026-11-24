@@ -150,6 +150,7 @@
     gap: 12px;
     padding: 18px 20px;
     height: calc(100vh - 0px);
+    overflow-y: auto;
   }
 
   .wrap.high {

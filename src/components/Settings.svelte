@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { api, type LocaleInfo } from "../lib/api";
+  import { untrack } from "svelte";
+  import { api, type LocaleInfo, type SettingsView } from "../lib/api";
   import { t, loadLocale } from "../lib/i18n.svelte";
   import { radioGroup } from "../lib/radio-group";
   import { ACCENTS, applyTheme } from "../lib/theme";
@@ -15,18 +15,21 @@
   import Sun from "@lucide/svelte/icons/sun";
   import X from "@lucide/svelte/icons/x";
 
-  let { onClose }: { onClose: () => void } = $props();
-  const ids = $props.id();
+  let { settings, locales, nativeFrame, onClose }: {
+    settings: SettingsView;
+    locales: LocaleInfo[];
+    nativeFrame: boolean;
+    onClose: () => void;
+  } = $props();
 
-  let language = $state("en");
-  let closeToTray = $state(true);
-  let autostart = $state(false);
-  let theme = $state("system");
-  let accent = $state("blue");
-  let popupCorner = $state("bottom-right");
-  let loaded = $state(false);
-  let locales = $state<LocaleInfo[]>([]);
-  let appliedLanguage = "";
+  const initial = untrack(() => $state.snapshot(settings));
+  let language = $state(initial.language);
+  let closeToTray = $state(initial.closeToTray);
+  let autostart = $state(initial.autostartEnabled);
+  let theme = $state(initial.theme);
+  let accent = $state(initial.accent);
+  let popupCorner = $state(initial.popupCorner);
+  let appliedLanguage = initial.language;
 
   // Same systematic palette as app.css: OKLCH L 0.55 / C 0.155, hue step 40°.
   const ACCENT_COLORS: Record<string, string> = {
@@ -39,22 +42,6 @@
   const THEMES = [
     { mode: "system", icon: Monitor }, { mode: "dark", icon: Moon }, { mode: "light", icon: Sun },
   ];
-
-  onMount(async () => {
-    try {
-      const s = await api.getSettings();
-      language = s.language;
-      appliedLanguage = language;
-      closeToTray = s.closeToTray;
-      autostart = s.autostartEnabled;
-      theme = s.theme;
-      accent = s.accent;
-      popupCorner = s.popupCorner;
-      locales = await api.listLocales();
-    } finally {
-      loaded = true;
-    }
-  });
 
   async function toggleAutostart(event: Event) {
     autostart = await api.setAutostart((event.currentTarget as HTMLInputElement).checked);
@@ -90,17 +77,18 @@
   }
 </script>
 
-  <div class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby={`${ids}-title`}>
-    <header class="settings-head" data-tauri-drag-region>
-      <h2 id={`${ids}-title`} data-tauri-drag-region>{t("settings.title")}</h2>
-      <button class="icon close" type="button" onclick={onClose} aria-label={t("settings.close")}>
-        <X size={16} aria-hidden="true" />
-      </button>
-    </header>
+  <div class="settings-dialog" role="dialog" aria-modal="true" aria-label={t("settings.title")}>
+    {#if !nativeFrame}
+      <header class="settings-head" data-tauri-drag-region>
+        <h2 data-tauri-drag-region>{t("settings.title")}</h2>
+        <button class="icon close" type="button" onclick={onClose} aria-label={t("settings.close")}>
+          <X size={16} aria-hidden="true" />
+        </button>
+      </header>
+    {/if}
 
-    <div class="settings-body" aria-busy={!loaded}>
+    <div class="settings-body">
       <div class="settings-grid">
-      {#if loaded}
         <section class="settings-group">
           <h3><Palette size={16} aria-hidden="true" />{t("settings.group_appearance")}</h3>
           <label class="settings-field">
@@ -158,7 +146,6 @@
             </label>
           </div>
         </section>
-      {/if}
       </div>
     </div>
     <footer class="settings-footer"><Check size={14} aria-hidden="true" /><span>{t("settings.applied_immediately")}</span></footer>

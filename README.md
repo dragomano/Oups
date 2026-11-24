@@ -24,6 +24,9 @@ packages. Built with Tauri 2 + Svelte 5.
 - Popups appear in a configurable screen position (corners, edge centers,
   center) and stack like a card deck
   (each next popup shifts aside instead of covering the previous one).
+  On Linux, Oups prefers X11 or XWayland automatically so it can request the
+  chosen position even when opened from the app menu. If XWayland is
+  unavailable in a Wayland session, the desktop compositor places the windows.
 - Snoozed firings snap back to the recurrence grid — a 15-minute interval never
   drifts because you hit snooze.
 - Missed reminders (the PC was off or asleep) collapse into a single
@@ -129,10 +132,10 @@ The name comes from `tauri.conf.json`, the version, author and license from
 match the English locale. Release dates use `SOURCE_DATE_EPOCH` when set,
 otherwise the latest Git commit date, so rebuilding a revision is reproducible.
 
-Both Linux packages carry AppStream metadata, the license and a stock icon;
-AppStream links to the existing English and Russian screenshots on GitHub.
-Opening a local `.deb` before installation can still show a limited card in
-Ubuntu App Center; a full pre-install listing needs repository AppStream data.
+Both Linux packages carry AppStream metadata, the license and a stock icon.
+AppStream includes the app name, publisher, license, and release date, and links
+to the existing English and Russian screenshots on GitHub. Ubuntu App Center
+reads the Debian package name and description when opening a local `.deb` file.
 macOS uses its native `.icns` icon, category and copyright in `Info.plist`,
 plus localized credits with an offline screenshot gallery and the MIT license
 inside `Contents/Resources`. These bundle files do not publish a Mac App Store

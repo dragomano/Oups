@@ -148,6 +148,18 @@ pub fn open_popup(app: &AppHandle, r: &Reminder) {
         let _ = existing.set_focus();
         return;
     }
+    // GTK signal handlers must be installed on the main thread. Startup
+    // catch-up already builds its popup there in Tauri's setup callback.
+    #[cfg(target_os = "linux")]
+    {
+        let handle = app.clone();
+        let title = r.title.clone();
+        if let Err(e) = app.run_on_main_thread(move || build_popup_window(&handle, &label, &title))
+        {
+            eprintln!("failed to dispatch popup window: {e}");
+        }
+    }
+    #[cfg(not(target_os = "linux"))]
     build_popup_window(app, &label, &r.title);
 }
 
@@ -166,22 +178,50 @@ fn build_popup_window(app: &AppHandle, label: &str, title: &str) {
     // Hidden from creation: the popup reveals itself via `popup_window_ready`
     // once its interface is rendered, so no blank WebView frame flashes. The
     // page is shared with every window; the label selects the component.
-    let mut builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
+    let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
         .title(title)
         .inner_size(440.0, 310.0)
         .min_inner_size(340.0, 220.0)
-        .resizable(true)
+        .resizable(!cfg!(target_os = "linux"))
         .maximizable(false)
         .always_on_top(true)
         .focused(true)
-        .visible(false);
-    builder = builder.position(x, y);
-    if let Err(e) = builder.build() {
-        eprintln!("failed to open popup window '{label}': {e}");
-        return;
+        .visible(false)
+        .position(x, y);
+    let window = match builder.build() {
+        Ok(window) => window,
+        Err(e) => {
+            eprintln!("failed to open popup window '{label}': {e}");
+            return;
+        }
+    };
+    #[cfg(target_os = "linux")]
+    {
+        crate::linux_window::keep_windowed(&window);
+        position_after_map(&window, x, y);
     }
     // A fired reminder must not stay invisible if its page never loads.
-    startup::fallback_reveal(app, label, startup::READY_FALLBACK);
+    startup::fallback_reveal(window.app_handle(), window.label(), startup::READY_FALLBACK);
+}
+
+#[cfg(target_os = "linux")]
+fn position_after_map(window: &tauri::WebviewWindow, x: f64, y: f64) {
+    use gtk::prelude::{GtkWindowExt, ObjectExt, WidgetExt, WidgetExtManual};
+
+    let Ok(window) = window.gtk_window() else {
+        return;
+    };
+    // X11 window managers may ignore the initial move of an unmapped
+    // window. Native Wayland delegates all toplevel placement to the compositor.
+    if window.display().type_().name() == "GdkX11Display" {
+        let positioned = std::cell::Cell::new(false);
+        window.connect_map_event(move |window, _| {
+            if !positioned.replace(true) {
+                window.move_(x.round() as i32, y.round() as i32);
+            }
+            gtk::glib::Propagation::Proceed
+        });
+    }
 }
 
 /// Popup geometry: inner size plus room for the native title bar.
@@ -213,11 +253,24 @@ fn popup_origin(app: &AppHandle, position: &str, index: usize) -> (f64, f64) {
     let scale = m.scale_factor();
     let area = m.work_area();
     // Work area is in physical px, window positions in logical px.
-    let x0 = f64::from(area.position.x) / scale;
-    let y0 = f64::from(area.position.y) / scale;
-    let w = f64::from(area.size.width) / scale;
-    let h = f64::from(area.size.height) / scale;
+    origin_in_work_area(
+        position,
+        index,
+        f64::from(area.position.x) / scale,
+        f64::from(area.position.y) / scale,
+        f64::from(area.size.width) / scale,
+        f64::from(area.size.height) / scale,
+    )
+}
 
+fn origin_in_work_area(
+    position: &str,
+    index: usize,
+    x0: f64,
+    y0: f64,
+    w: f64,
+    h: f64,
+) -> (f64, f64) {
     let k = (index % 6) as f64 * STACK_STEP;
     let cx = x0 + (w - POPUP_W) / 2.0; // horizontally centered origin
     let cy = y0 + (h - POPUP_H) / 2.0; // vertically centered origin
@@ -238,7 +291,10 @@ fn popup_origin(app: &AppHandle, position: &str, index: usize) -> (f64, f64) {
         // "top-left" and any unknown value.
         _ => (x0 + POPUP_MARGIN + k, y0 + POPUP_MARGIN + k),
     };
-    (x.max(0.0), y.max(0.0))
+    (
+        x.clamp(x0, x0 + (w - POPUP_W).max(0.0)),
+        y.clamp(y0, y0 + (h - POPUP_H).max(0.0)),
+    )
 }
 
 /// On startup: fire everything that came due while the app was closed or the
@@ -277,6 +333,26 @@ pub fn startup_catchup(app: &AppHandle) {
 mod tests {
     use super::*;
     use crate::model::{EndMode, Priority, Recurrence};
+
+    #[test]
+    fn popup_placement_uses_the_configured_corner_on_a_negative_origin_monitor() {
+        assert_eq!(
+            origin_in_work_area("top-left", 0, -1280.0, -900.0, 1280.0, 880.0),
+            (-1256.0, -876.0)
+        );
+        assert_eq!(
+            origin_in_work_area("bottom-right", 1, -1280.0, -900.0, 1280.0, 880.0),
+            (-500.0, -422.0)
+        );
+    }
+
+    #[test]
+    fn popup_stack_uses_the_available_space_on_a_small_monitor() {
+        assert_eq!(
+            origin_in_work_area("bottom-right", 5, 100.0, 40.0, 500.0, 400.0),
+            (100.0, 40.0)
+        );
+    }
 
     fn reminder(start_at: &str, rec: Recurrence, end: EndMode, fired: u32) -> Reminder {
         Reminder {

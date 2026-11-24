@@ -185,6 +185,8 @@ jobs:
       - name: Check Linux bundle metadata
         run: |
           deb=$(find src-tauri/target/release/bundle/deb -maxdepth 1 -name '*.deb' -print -quit)
+          description=$(node -p 'const {bundle} = require("./src-tauri/tauri.conf.json"); [bundle.shortDescription, bundle.longDescription].join("\n ")')
+          test "$(dpkg-deb --field "$deb" Description)" = "$description"
           extracted="$RUNNER_TEMP/oups-deb"
           dpkg-deb --extract "$deb" "$extracted"
           appstreamcli validate --no-net "$extracted/usr/share/metainfo/com.toster.oups.metainfo.xml"
