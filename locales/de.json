@@ -123,6 +123,16 @@
     "count_noun": "Wiederholung|Wiederholungen",
     "until": "Bis Datum"
   },
+  "date": {
+    "clear": "Löschen",
+    "today": "Heute",
+    "prev_month": "Vorheriger Monat",
+    "next_month": "Nächster Monat"
+  },
+  "number": {
+    "increase": "Erhöhen",
+    "decrease": "Verringern"
+  },
   "editor": {
     "new_title": "Neue Erinnerung",
     "edit_title": "Erinnerung bearbeiten",

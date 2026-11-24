@@ -34,10 +34,6 @@
   --accent-hover: color-mix(in srgb, var(--accent) 82%, var(--text));
   --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
   --accent-text: #ffffff;
-  /* The native date/time glyph is always dark and ignores the palette, so dark
-     themes flip it with a filter. Softened by default as secondary chrome. */
-  --picker-icon-filter: none;
-  --picker-icon-opacity: 0.75;
   font-size: 15px;
 }
 
@@ -88,7 +84,6 @@
   --danger-soft: #3b1a1a;
   --warn-soft: #3d2f12;
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-  --picker-icon-filter: invert(1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -107,7 +102,6 @@
     --danger-soft: #3b1a1a;
     --warn-soft: #3d2f12;
     --shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-    --picker-icon-filter: invert(1);
   }
 }
 
@@ -151,7 +145,6 @@ body {
 }
 
 input,
-select,
 textarea,
 button {
   font: inherit;
@@ -160,10 +153,6 @@ button {
 
 input[type="text"],
 input[type="search"],
-input[type="date"],
-input[type="time"],
-input[type="number"],
-select,
 textarea {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -174,24 +163,9 @@ textarea {
 }
 
 input:focus,
-select:focus,
 textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-soft);
-}
-
-/* The calendar/clock indicator is a separate pseudo-element: `color` on the
-   input doesn't reach it, so the theme variables are applied here. */
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator {
-  filter: var(--picker-icon-filter);
-  opacity: var(--picker-icon-opacity);
-  cursor: pointer;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator:hover,
-input[type="time"]::-webkit-calendar-picker-indicator:hover {
-  opacity: 1;
 }
 
 textarea {

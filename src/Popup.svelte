@@ -8,11 +8,13 @@
   import { fmtDateTime, fmtTime, parseLocal, recurrenceText } from "./lib/time";
   import { isValidSnoozeCount, SNOOZE_DEFAULT, SNOOZE_MAX, SNOOZE_MIN, SNOOZE_UNITS, snoozeUnitLabel } from "./lib/snooze";
   import NoteLinks from "./components/NoteLinks.svelte";
+  import NumberField from "./components/NumberField.svelte";
+  import Select from "./components/Select.svelte";
 
   let data = $state<PopupData | null>(null);
   let list = $state<Reminder[]>([]);
 
-  let delayCount = $state<number | undefined>(SNOOZE_DEFAULT);
+  let delayCount = $state<number>(SNOOZE_DEFAULT);
   let delayUnit = $state<SnoozeUnit>("minutes");
   const validDelay = $derived(isValidSnoozeCount(delayCount));
 
@@ -74,31 +76,22 @@
 
 <svelte:window onkeydown={onKeydown} />
 
-<!-- Keep the delay controls compact; the native unit menu opens outside the layout. -->
+<!-- Keep the delay controls compact; the unit menu opens outside the layout. -->
 {#snippet delayControls(applyLabel: string, closeLabel: string, onClose: () => void)}
   <div class="actions">
     <form class="delay-form" onsubmit={(event) => { event.preventDefault(); void applyChoice(); }}>
       <div class="delay-row">
-        <input
-          type="number"
-          min={SNOOZE_MIN}
-          max={SNOOZE_MAX}
-          step="1"
-          required
-          bind:value={delayCount}
-          aria-label={t("popup.snooze_count")}
-          aria-invalid={!validDelay}
-          aria-describedby={!validDelay ? "snooze-error" : undefined}
+        <NumberField bind:value={delayCount} min={SNOOZE_MIN} max={SNOOZE_MAX} ariaLabel={t("popup.snooze_count")} />
+        <Select
+          value={delayUnit}
+          onchange={(unit) => (delayUnit = unit as SnoozeUnit)}
+          options={SNOOZE_UNITS.map((unit) => ({ value: unit, label: snoozeUnitLabel(unit, delayCount) }))}
+          ariaLabel={t("popup.snooze_unit")}
         />
-        <select bind:value={delayUnit} aria-label={t("popup.snooze_unit")}>
-          {#each SNOOZE_UNITS as unit (unit)}
-            <option value={unit}>{snoozeUnitLabel(unit, delayCount)}</option>
-          {/each}
-        </select>
         <button type="submit" class="primary" disabled={!validDelay} aria-label={applyLabel}>{applyLabel}</button>
       </div>
       {#if !validDelay}
-        <p class="delay-error" id="snooze-error" role="alert">{t("popup.snooze_range", { min: SNOOZE_MIN, max: SNOOZE_MAX })}</p>
+        <p class="delay-error" role="alert">{t("popup.snooze_range", { min: SNOOZE_MIN, max: SNOOZE_MAX })}</p>
       {/if}
     </form>
     <button onclick={onClose} aria-label={closeLabel}>{closeLabel}</button>
@@ -227,21 +220,18 @@
     gap: 8px;
   }
 
-  .delay-row select {
+  .delay-row > :global(.select) {
     flex: 1 1 auto;
     min-width: 0;
-    padding: 9px 10px;
   }
 
   .delay-row button {
     flex: none;
   }
 
-  .delay-row input {
+  .delay-row > :global(.number-field) {
     flex: none;
     width: 6em;
-    padding: 9px 10px;
-    font-variant-numeric: tabular-nums;
   }
 
   .delay-error {

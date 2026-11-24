@@ -39,7 +39,10 @@ type DemoReminder = {
   updatedAt: string;
 };
 
-const DEMO: Record<string, { reminders: DemoReminder[] }> = { en, ru };
+// JSON inference keeps `recurrence.type` as a plain string, so the demo files
+// are asserted to the shape the reader guarantees. The stand compiles this
+// file too, and the assertion keeps that check meaningful.
+const DEMO = { en, ru } as unknown as Record<string, { reminders: DemoReminder[] }>;
 
 const DAY = 86_400_000;
 const HOUR = 3_600_000;
@@ -293,7 +296,12 @@ function build(source: DemoReminder, lang: string, patch: Partial<Reminder> = {}
 
 /** The twelve imported reminders, anchored exactly as the importer anchors them. */
 export function activeReminders(lang: string): Reminder[] {
-  return DEMO[lang].reminders.map((r) => build(r, lang));
+  // The gallery only ships en/ru demo text. The stand can preview every UI
+  // locale, so an unknown language borrows the English rows instead of
+  // rendering nothing.
+  const demo = DEMO[lang] ?? DEMO.en;
+
+  return demo.reminders.map((r) => build(r, lang));
 }
 
 /**
@@ -319,9 +327,10 @@ export function completedReminders(lang: string): Reminder[] {
     };
   // Finished things are one-off jobs, so they keep the default rule rather than
   // the first demo reminder's.
-  const template: DemoReminder = { ...DEMO[lang].reminders[0], recurrence: { type: "once" } };
+  const demo = DEMO[lang] ?? DEMO.en;
+  const template: DemoReminder = { ...demo.reminders[0], recurrence: { type: "once" } };
 
-  return copy[lang].map(({ title, priority, completed, enabled }) =>
+  return (copy[lang] ?? copy.en).map(({ title, priority, completed, enabled }) =>
     build({ ...template, title, note: "", priority }, lang, { completed, enabled }),
   );
 }

@@ -136,11 +136,19 @@ export function recurrenceText(rec: Recurrence): string {
   }
 }
 
-/** Today's date as "YYYY-MM-DD" for <input type="date">. */
-export function todayStr(): string {
-  const d = new Date();
+const isoDate = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+/** Today's date as "YYYY-MM-DD". */
+export function todayStr(): string {
+  return isoDate(new Date());
+}
+
+/** A calendar date moved by whole days, as "YYYY-MM-DD". */
+export function addDays(date: string, days: number): string {
+  const [year, month, day] = date.split("-").map(Number);
+
+  return isoDate(new Date(year, month - 1, day + days));
 }
 
 /** Current local time as "HH:MM" for <input type="time">. */

@@ -123,6 +123,16 @@
     "count_noun": "repeat|repeats",
     "until": "Until date"
   },
+  "date": {
+    "clear": "Clear",
+    "today": "Today",
+    "prev_month": "Previous month",
+    "next_month": "Next month"
+  },
+  "number": {
+    "increase": "Increase",
+    "decrease": "Decrease"
+  },
   "editor": {
     "new_title": "New reminder",
     "edit_title": "Edit reminder",

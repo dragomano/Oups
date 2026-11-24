@@ -125,6 +125,16 @@
     "count_noun": "powtórzeniu|powtórzeniach|powtórzeniach",
     "until": "Do daty"
   },
+  "date": {
+    "clear": "Wyczyść",
+    "today": "Dziś",
+    "prev_month": "Poprzedni miesiąc",
+    "next_month": "Następny miesiąc"
+  },
+  "number": {
+    "increase": "Zwiększ",
+    "decrease": "Zmniejsz"
+  },
   "editor": {
     "new_title": "Nowe przypomnienie",
     "edit_title": "Edytuj przypomnienie",

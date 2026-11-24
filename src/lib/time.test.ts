@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { Recurrence } from "./api";
 import { i18n, t } from "./i18n.svelte";
 import {
+  addDays,
   daysInMonth,
   everyPrefix,
   fmtRelative,
@@ -107,6 +108,16 @@ describe("daysInMonth", () => {
 describe("todayStr", () => {
   it("returns a zero-padded YYYY-MM-DD string", () => {
     expect(todayStr()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
+describe("addDays", () => {
+  it("moves a date across month, year and leap-day boundaries", () => {
+    expect(addDays("2026-11-24", 1)).toBe("2026-11-25");
+    expect(addDays("2026-11-30", 1)).toBe("2026-12-01");
+    expect(addDays("2026-12-31", 1)).toBe("2027-01-01");
+    expect(addDays("2028-02-28", 1)).toBe("2028-02-29");
+    expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
   });
 });
 

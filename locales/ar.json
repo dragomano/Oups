@@ -127,6 +127,16 @@
     "count_noun": "تكرار|تكرارًا|تكرارين|تكرارات",
     "until": "حتى تاريخ"
   },
+  "date": {
+    "clear": "مسح",
+    "today": "اليوم",
+    "prev_month": "الشهر السابق",
+    "next_month": "الشهر التالي"
+  },
+  "number": {
+    "increase": "زيادة",
+    "decrease": "إنقاص"
+  },
   "editor": {
     "new_title": "تذكير جديد",
     "edit_title": "تعديل التذكير",

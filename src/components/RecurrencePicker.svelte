@@ -1,8 +1,10 @@
 <script lang="ts">
   import { t, i18n } from "../lib/i18n.svelte";
-  import type { Recurrence } from "../lib/api";
+  import type { IntervalUnit, Recurrence } from "../lib/api";
   import { daysInMonth, everyPrefix, formatUnit, parseLocal } from "../lib/time";
   import MonthDayPicker from "./MonthDayPicker.svelte";
+  import Select from "./Select.svelte";
+  import NumberField from "./NumberField.svelte";
 
   let {
     rec = $bindable(),
@@ -47,6 +49,11 @@
     return new Intl.DateTimeFormat(i18n.lang, { month: "long" }).format(new Date(2026, m - 1, 1));
   }
 
+  const typeOptions = $derived(types.map((tp) => ({ value: tp.id, label: t(tp.label) })));
+  const monthOptions = $derived(
+    Array.from({ length: 12 }, (_, i) => i + 1).map((m) => ({ value: String(m), label: monthName(m) })),
+  );
+
   function setType(v: string) {
     switch (v) {
       case "once":
@@ -78,6 +85,14 @@
     }
   }
 
+  function setMonth(v: string) {
+    if (rec.type === "yearly") rec.month = Number(v);
+  }
+
+  function setUnit(v: string) {
+    if (rec.type === "interval") rec.unit = v as IntervalUnit;
+  }
+
   function toggleWeekday(w: number) {
     if (rec.type !== "weekly") return;
     const set = new Set(rec.weekdays);
@@ -89,11 +104,7 @@
 </script>
 
 <div class="picker">
-  <select value={rec.type} onchange={(e) => setType(e.currentTarget.value)} aria-label={t("editor.recurrence_label")}>
-    {#each types as tp (tp.id)}
-      <option value={tp.id}>{t(tp.label)}</option>
-    {/each}
-  </select>
+  <Select value={rec.type} onchange={setType} options={typeOptions} ariaLabel={t("editor.recurrence_label")} />
 
   {#if rec.type === "weekly"}
     <div class="weekdays" role="group" aria-label={t("rec.weekly")}>
@@ -115,25 +126,23 @@
   {:else if rec.type === "yearly"}
     <label class="inline">
       <span>{t("editor.month")}</span>
-      <select bind:value={rec.month} aria-label={t("editor.month")}>
-        {#each Array.from({ length: 12 }, (_, i) => i + 1) as m (m)}
-          <option value={m}>{monthName(m)}</option>
-        {/each}
-      </select>
+      <Select value={String(rec.month)} onchange={setMonth} options={monthOptions} ariaLabel={t("editor.month")} />
     </label>
     <label class="inline">
       <span>{t("editor.day")}</span>
-      <input type="number" min="1" max="31" bind:value={rec.day} aria-label={t("editor.day")} />
+      <NumberField bind:value={rec.day} min={1} max={31} ariaLabel={t("editor.day")} />
     </label>
   {:else if rec.type === "interval"}
+    {@const n = rec.n || 1}
     <label class="inline">
-      <span>{everyPrefix(rec.unit, rec.n ?? 1)}</span>
-      <input type="number" min="1" bind:value={rec.n} aria-label={t("editor.every")} />
-      <select bind:value={rec.unit} aria-label={t("rec.interval")}>
-        {#each units as u (u)}
-          <option value={u}>{formatUnit(u, rec.n ?? 1)}</option>
-        {/each}
-      </select>
+      <span>{everyPrefix(rec.unit, n)}</span>
+      <NumberField bind:value={rec.n} min={1} ariaLabel={t("editor.every")} />
+      <Select
+        value={rec.unit}
+        onchange={setUnit}
+        options={units.map((u) => ({ value: u, label: formatUnit(u, n) }))}
+        ariaLabel={t("rec.interval")}
+      />
     </label>
   {/if}
 </div>
@@ -175,10 +184,11 @@
     color: var(--muted);
   }
 
-  .inline input[type="number"] {
+  .inline > :global(.number-field) {
+    flex: none;
     width: 76px;
   }
 
-  .inline select { flex: 1; min-width: 0; }
+  .inline > :global(.select) { flex: 1; min-width: 0; }
   @media (pointer: coarse) { .wd { min-height: 44px; } }
 </style>

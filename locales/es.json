@@ -123,6 +123,16 @@
     "count_noun": "repetición|repeticiones",
     "until": "Hasta la fecha"
   },
+  "date": {
+    "clear": "Borrar",
+    "today": "Hoy",
+    "prev_month": "Mes anterior",
+    "next_month": "Mes siguiente"
+  },
+  "number": {
+    "increase": "Aumentar",
+    "decrease": "Reducir"
+  },
   "editor": {
     "new_title": "Nuevo recordatorio",
     "edit_title": "Editar recordatorio",

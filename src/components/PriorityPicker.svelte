@@ -296,4 +296,22 @@
     border: 1px solid var(--border);
     color: var(--muted);
   }
+
+  /* The selected option carries the checkmark the other lists show. */
+  .picker-menu button[aria-selected="true"]::after {
+    content: "✓";
+    margin-inline-start: auto;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  :global(:root[data-theme="dark"]) .picker-menu button[aria-selected="true"]::after {
+    color: var(--accent-text);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme="light"])) .picker-menu button[aria-selected="true"]::after {
+      color: var(--accent-text);
+    }
+  }
 </style>

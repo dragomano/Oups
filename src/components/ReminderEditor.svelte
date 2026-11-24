@@ -2,13 +2,16 @@
   import { onMount, untrack } from "svelte";
   import Trash2 from "@lucide/svelte/icons/trash-2";
   import X from "@lucide/svelte/icons/x";
-  import "./reminder-editor.css";
   import RecurrencePicker from "./RecurrencePicker.svelte";
   import PriorityPicker from "./PriorityPicker.svelte";
+  import Select from "./Select.svelte";
+  import DateField from "./DateField.svelte";
+  import TimeField from "./TimeField.svelte";
+  import NumberField from "./NumberField.svelte";
   import { api, type EndMode, type Priority, type Recurrence, type Reminder } from "../lib/api";
   import { validateReminderDraft } from "../lib/editor-validation";
   import { t } from "../lib/i18n.svelte";
-  import { declinedWord, isPastDateTime, nowTimeStr, todayStr } from "../lib/time";
+  import { addDays, declinedWord, isPastDateTime, nowTimeStr, todayStr } from "../lib/time";
 
   let {
     reminder = null,
@@ -31,11 +34,27 @@
   let rec = $state<Recurrence>(
     src?.recurrence ?? { type: "once" },
   );
-  let endType = $state<"never" | "afterCount" | "until">(src?.endMode?.type ?? "never");
+  let endType = $state<EndMode["type"]>(src?.endMode?.type ?? "never");
   let endCount = $state(src?.endMode?.type === "afterCount" ? src.endMode.n : 1);
-  let endDate = $state(src?.endMode?.type === "until" ? src.endMode.date : "");
+  // Until the user picks an end date themselves, it trails the start by one day.
+  const storedEnd = src?.endMode?.type === "until" ? src.endMode.date : null;
+  let endDatePicked = $state(storedEnd !== null);
+  let endDate = $state(storedEnd ?? "");
+
+  $effect(() => {
+    if (!endDatePicked) endDate = dateStr ? addDays(dateStr, 1) : "";
+  });
   let error = $state("");
   const titleError = $derived(error === "editor.error_title");
+  const endTypes = $derived([
+    { value: "never", label: t("end.never") },
+    { value: "afterCount", label: t("end.after") },
+    { value: "until", label: t("end.until") },
+  ]);
+
+  function setEndType(next: string) {
+    if (next === "never" || next === "afterCount" || next === "until") endType = next;
+  }
   let titleInput: HTMLInputElement | undefined;
   let saving = $state(false);
   // A one-shot whose moment is already behind the clock fires on the next
@@ -151,14 +170,14 @@
     </label>
 
     <div class="grid2">
-      <label class="field">
+      <div class="field">
         <span>{t("editor.date_label")}</span>
-        <input type="date" bind:value={dateStr} min={isNew ? todayStr() : undefined} aria-label={t("editor.date_label")} />
-      </label>
-      <label class="field">
+        <DateField bind:value={dateStr} min={isNew ? todayStr() : undefined} ariaLabel={t("editor.date_label")} />
+      </div>
+      <div class="field">
         <span>{t("editor.time_label")}</span>
-        <input type="time" bind:value={timeStr} aria-label={t("editor.time_label")} />
-      </label>
+        <TimeField bind:value={timeStr} ariaLabel={t("editor.time_label")} />
+      </div>
     </div>
 
     {#if pastStart}
@@ -181,16 +200,16 @@
       <div class="field">
         <span>{t("editor.end_label")}</span>
         <div class="end-row">
-          <select bind:value={endType} aria-label={t("editor.end_label")}>
-            <option value="never">{t("end.never")}</option>
-            <option value="afterCount">{t("end.after")}</option>
-            <option value="until">{t("end.until")}</option>
-          </select>
+          <Select value={endType} onchange={setEndType} ariaLabel={t("editor.end_label")} options={endTypes} />
           {#if endType === "afterCount"}
-            <input type="number" min="1" bind:value={endCount} aria-label={declinedWord("end.count_noun", endCountSafe)} />
+            <NumberField bind:value={endCount} min={1} ariaLabel={declinedWord("end.count_noun", endCountSafe)} />
             <span class="muted">{declinedWord("end.count_noun", endCountSafe)}</span>
           {:else if endType === "until"}
-            <input type="date" bind:value={endDate} aria-label={t("end.until")} />
+            <DateField
+              bind:value={endDate}
+              onchange={() => (endDatePicked = true)}
+              ariaLabel={t("end.until")}
+            />
           {/if}
         </div>
         {#if endBeforeStart || countUsedUp}
@@ -223,3 +242,157 @@
 </form>
 
 <svelte:window onkeydown={onKeydown} />
+
+<style>
+  .reminder-editor {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100dvh;
+    margin: 0;
+    overflow: hidden;
+    background: var(--panel);
+  }
+
+  .editor-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .editor-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: none;
+    gap: 16px;
+    padding: 20px 24px 0;
+  }
+
+  .editor-close { flex: none; }
+
+  .editor-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 18px 24px 22px;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  .editor-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 286px);
+    gap: 30px;
+  }
+
+  .editor-main,
+  .editor-schedule {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .field > span {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .field > input,
+  .field > textarea {
+    width: 100%;
+  }
+
+  textarea {
+    height: 130px;
+    min-height: 58px;
+    max-height: 240px;
+  }
+
+  .grid2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .end-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .end-row > :global(.select),
+  .end-row > :global(.date-field) { flex: 1; }
+  .end-row > :global(.number-field) { flex: none; width: 80px; }
+  .muted { color: var(--muted); }
+  .error,
+  .field > .error { color: var(--danger); font-size: 13px; line-height: 1.35; }
+  input[aria-invalid="true"] { border-color: var(--danger); }
+  input[aria-invalid="true"]:focus { box-shadow: 0 0 0 2px var(--danger-soft); }
+  .hint { color: var(--muted); font-size: 13px; line-height: 1.35; }
+
+  .footer {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 8px;
+    margin: 0 24px;
+    margin-inline-end: calc(24px + var(--editor-gutter, 0px));
+    padding: 18px 0 22px;
+    border-top: 1px solid var(--border);
+    background: var(--panel);
+  }
+
+  .spacer { flex: 1; }
+  .delete { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+
+  @media (max-width: 700px) {
+    .editor-columns { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+    .editor-form { padding: 18px 16px; gap: 14px; }
+    .editor-head { padding: 16px 16px 0; }
+    .editor-main,
+    .editor-schedule { gap: 14px; }
+    textarea { height: 64px; }
+    .footer { margin: 0 16px; margin-inline-end: calc(16px + var(--editor-gutter, 0px)); padding: 12px 0 max(14px, env(safe-area-inset-bottom)); }
+  }
+
+  @media (max-width: 360px) {
+    .grid2 { grid-template-columns: minmax(0, 1fr); }
+    .footer > button { flex: 1; min-height: 40px; padding-inline: 8px; }
+    .footer > .delete { flex: 0 0 40px; padding: 0; }
+    .delete span,
+    .spacer { display: none; }
+  }
+
+  @media (max-height: 560px) {
+    .editor-form { padding-block: 14px; gap: 12px; }
+    .editor-head { padding-top: 14px; }
+    .editor-main,
+    .editor-schedule { gap: 12px; }
+    textarea { height: 64px; }
+    .footer { padding-block: 12px; }
+  }
+
+  @media (pointer: coarse) {
+    /* Keep the original priority of this fallback against child controls. */
+    :global(.reminder-editor input),
+    :global(.reminder-editor button),
+    .footer > button { min-height: 44px; }
+    .delete { min-width: 44px; }
+    .editor-close { inline-size: 44px; block-size: 44px; }
+  }
+</style>
