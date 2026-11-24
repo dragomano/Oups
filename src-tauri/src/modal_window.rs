@@ -105,7 +105,12 @@ pub fn open(app: &AppHandle, label: &str, title: &str) -> Result<(), String> {
     #[cfg(target_os = "linux")]
     crate::linux_window::keep_windowed(&window);
     main.set_enabled(false).map_err(|e| e.to_string())?;
-    startup::fallback_reveal(window.app_handle(), window.label(), startup::READY_FALLBACK);
+    startup::fallback_reveal(
+        window.app_handle(),
+        window.label(),
+        startup::READY_FALLBACK,
+        startup::RevealFallback::default(),
+    );
     Ok(())
 }
 

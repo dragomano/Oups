@@ -201,7 +201,12 @@ fn build_popup_window(app: &AppHandle, label: &str, title: &str) {
         position_after_map(&window, x, y);
     }
     // A fired reminder must not stay invisible if its page never loads.
-    startup::fallback_reveal(window.app_handle(), window.label(), startup::READY_FALLBACK);
+    startup::fallback_reveal(
+        window.app_handle(),
+        window.label(),
+        startup::READY_FALLBACK,
+        startup::RevealFallback::default(),
+    );
 }
 
 #[cfg(target_os = "linux")]

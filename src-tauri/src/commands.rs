@@ -42,6 +42,7 @@ pub enum PopupData {
 /// place): reveal the main window unless this launch came from autostart.
 #[tauri::command]
 pub fn main_window_ready(app: AppHandle) -> Result<(), String> {
+    app.state::<startup::RevealFallback>().cancel();
     let via_autostart = app.state::<startup::Launch>().via_autostart;
     if startup::reveal_on_ready(via_autostart) {
         tray::show_main(&app);

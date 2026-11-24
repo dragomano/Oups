@@ -59,6 +59,7 @@ pub fn run() {
         // The main window is created hidden (tauri.conf.json) and shown by the
         // frontend; this decides whether the ready signal may show it at all.
         .manage(startup::Launch::detect(std::env::args_os()))
+        .manage(startup::RevealFallback::default())
         // Must be the first plugin: a manual second launch reveals this one.
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
             if !startup::is_autostart(args) {
@@ -105,7 +106,12 @@ pub fn run() {
             // reports ready. If the interface never loads (broken assets, a
             // JS crash), reveal it anyway instead of staying invisible.
             if startup::reveal_on_ready(app.state::<startup::Launch>().via_autostart) {
-                startup::fallback_reveal(app.handle(), "main", startup::READY_FALLBACK);
+                startup::fallback_reveal(
+                    app.handle(),
+                    "main",
+                    startup::READY_FALLBACK,
+                    app.state::<startup::RevealFallback>().inner().clone(),
+                );
             }
             Ok(())
         })
@@ -119,12 +125,13 @@ pub fn run() {
                         let _ = modal.close();
                     }
                 }
+                let app = window.app_handle();
                 let close_to_tray = {
-                    let app = window.app_handle();
                     let state = app.state::<AppState>();
                     state.settings_lock().close_to_tray
                 };
                 if close_to_tray {
+                    app.state::<startup::RevealFallback>().cancel();
                     api.prevent_close();
                     let _ = window.hide();
                 }

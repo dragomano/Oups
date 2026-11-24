@@ -1,4 +1,6 @@
 use std::ffi::OsStr;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use tauri::{AppHandle, Manager};
@@ -8,6 +10,21 @@ pub const AUTOSTART_ARG: &str = "--autostart";
 /// How long a hidden window waits for its interface to report ready before
 /// the fallback reveals it anyway.
 pub const READY_FALLBACK: Duration = Duration::from_secs(10);
+
+#[derive(Clone, Default)]
+pub struct RevealFallback {
+    cancelled: Arc<AtomicBool>,
+}
+
+impl RevealFallback {
+    pub fn cancel(&self) {
+        self.cancelled.store(true, Ordering::Release);
+    }
+
+    fn should_reveal(&self, visible: bool) -> bool {
+        !self.cancelled.load(Ordering::Acquire) && !visible
+    }
+}
 
 /// How this process was started: the autostart entry adds `--autostart`, and
 /// such a launch keeps the main window in the tray even after the interface
@@ -34,16 +51,14 @@ pub fn reveal_on_ready(via_autostart: bool) -> bool {
     !via_autostart
 }
 
-/// Reveal the window `label` after `delay` even if its frontend never
-/// reported ready: a broken page must not leave the app or a fired reminder
-/// invisible. A window already shown (or closed) is left alone.
-pub fn fallback_reveal(app: &AppHandle, label: &str, delay: Duration) {
+/// Reveal a still-hidden window after `delay` unless its fallback was cancelled.
+pub fn fallback_reveal(app: &AppHandle, label: &str, delay: Duration, fallback: RevealFallback) {
     let handle = app.clone();
     let label = label.to_string();
     std::thread::spawn(move || {
         std::thread::sleep(delay);
         if let Some(win) = handle.get_webview_window(&label)
-            && !win.is_visible().unwrap_or(true)
+            && fallback.should_reveal(win.is_visible().unwrap_or(true))
         {
             let _ = win.show();
             let _ = win.set_focus();
@@ -162,5 +177,25 @@ mod tests {
         assert!(!is_autostart(["Oups.exe", "--autostart=false"]));
         assert!(!is_autostart([AUTOSTART_ARG]));
         assert!(!is_autostart(Vec::<String>::new()));
+    }
+
+    #[test]
+    fn pending_fallback_reveals_a_hidden_window() {
+        assert!(RevealFallback::default().should_reveal(false));
+    }
+
+    #[test]
+    fn ready_or_tray_hide_cancels_the_pending_reveal() {
+        let fallback = RevealFallback::default();
+        let timer = fallback.clone();
+
+        fallback.cancel();
+
+        assert!(!timer.should_reveal(false));
+    }
+
+    #[test]
+    fn fallback_leaves_visible_or_closed_windows_alone() {
+        assert!(!RevealFallback::default().should_reveal(true));
     }
 }
