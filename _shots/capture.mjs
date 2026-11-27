@@ -363,6 +363,27 @@ try {
         if (!result.value) throw new Error(`${shot.name}.${lang}: window chrome or one-row toolbar missing`);
       }
 
+      // The missed window is fitted to its cards: a list that fits shows no
+      // scrollbar and leaves no space under the cards.
+      if (shot.popup === "missed") {
+        const { result } = await cdp.call(
+          "Runtime.evaluate",
+          {
+            expression: `(() => {
+            const doc = document.querySelector("#popup-frame")?.contentDocument;
+            const list = doc?.querySelector(".missed-list");
+            const wrap = doc?.querySelector(".wrap");
+            const top = Number.parseFloat(document.querySelector("#popup-frame")?.style.top);
+            return Boolean(list && wrap && list.scrollHeight <= list.clientHeight + 1
+              && Math.abs(wrap.scrollHeight - wrap.clientHeight) <= 2 && top >= 0);
+          })()`,
+            returnByValue: true,
+          },
+          sessionId,
+        );
+        if (!result.value) throw new Error(`${shot.name}.${lang}: the missed window does not fit its cards`);
+      }
+
       if (shot.name === "04-editor" || shot.page === "editor") {
         const { result } = await cdp.call(
           "Runtime.evaluate",
@@ -434,6 +455,37 @@ try {
       );
       const filename = `${shot.name}.${lang}.png`;
       const written = writeScreenshot(join(outDir, filename), Buffer.from(data, "base64"));
+
+      // Dismissing a card fits the window to the cards that remain and keeps
+      // its bottom edge, so it shrinks back into the corner.
+      if (shot.popup === "missed") {
+        const { result } = await cdp.call(
+          "Runtime.evaluate",
+          {
+            expression: `(async () => {
+            const frame = document.querySelector("#popup-frame");
+            const doc = frame.contentDocument;
+            const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+            const before = frame.getBoundingClientRect();
+            doc.querySelector(".missed-list .icon-close").click();
+            for (let i = 0; i < 100 && frame.getBoundingClientRect().height === before.height; i++) await wait(20);
+            await wait(100);
+            const after = frame.getBoundingClientRect();
+            const list = doc.querySelector(".missed-list");
+            const wrap = doc.querySelector(".wrap");
+            return Boolean(doc.querySelectorAll(".missed-list li").length === 3
+              && after.height < before.height && Math.abs(after.bottom - before.bottom) <= 1
+              && list.scrollHeight <= list.clientHeight + 1
+              && Math.abs(wrap.scrollHeight - wrap.clientHeight) <= 2);
+          })()`,
+            awaitPromise: true,
+            returnByValue: true,
+          },
+          sessionId,
+        );
+        if (!result.value)
+          throw new Error(`${shot.name}.${lang}: dismissing a card does not refit the missed window`);
+      }
 
       console.log(`${written ? "captured" : "unchanged"} ${filename}`);
     }

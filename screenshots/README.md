@@ -38,8 +38,11 @@ app itself.
   the 1px window frame around them, which a browser capture cannot show.
 - The popup shots composite the real 440×310 popup window over the app, sitting
   in the corner the app defaults to (`popup_corner = bottom-right`) — that is
-  how it actually appears over your work. The missed list uses a taller window
-  because that popup grows with the number of missed reminders.
+  how it actually appears over your work. The missed window is then fitted to
+  its cards the way the app does it: its page measures the list and calls
+  `fit_popup_window`, and the stub behind that command resizes the frame
+  (capped at two thirds of the canvas the way the app caps it, bottom edge
+  kept) instead of a window. The shot shows four cards.
   Unlike the main window, popups keep their native title bar.
 - `04-editor` composites the standalone editor in an 820px-wide iframe, fitted
   to its content, with its custom header and the priority dropdown open.

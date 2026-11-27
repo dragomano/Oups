@@ -1,5 +1,7 @@
 use chrono::NaiveDateTime;
-use tauri::{AppHandle, Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{
+    AppHandle, Emitter, Manager, PhysicalPosition, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
+};
 use tokio::time::Duration;
 
 use crate::db;
@@ -164,7 +166,7 @@ pub fn open_popup(app: &AppHandle, r: &Reminder) {
 }
 
 fn build_popup_window(app: &AppHandle, label: &str, title: &str) {
-    let position = {
+    let corner = {
         let state = app.state::<AppState>();
         state.settings_lock().popup_corner.clone()
     };
@@ -174,20 +176,21 @@ fn build_popup_window(app: &AppHandle, label: &str, title: &str) {
         .keys()
         .filter(|l| l.starts_with(POPUP_PREFIX) || **l == MISSED_LABEL)
         .count();
-    let (x, y) = popup_origin(app, &position, open_count);
+    // The popup's outer top-left corner, then the top of its work area.
+    let origin = popup_origin(app, &corner, open_count);
     // Hidden from creation: the popup reveals itself via `popup_window_ready`
     // once its interface is rendered, so no blank WebView frame flashes. The
     // page is shared with every window; the label selects the component.
     let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
         .title(title)
-        .inner_size(440.0, 310.0)
+        .inner_size(POPUP_W, POPUP_INNER_H)
         .min_inner_size(340.0, 220.0)
         .resizable(!cfg!(target_os = "linux"))
         .maximizable(false)
         .always_on_top(true)
         .focused(true)
         .visible(false)
-        .position(x, y);
+        .position(origin.0, origin.1);
     let window = match builder.build() {
         Ok(window) => window,
         Err(e) => {
@@ -198,7 +201,7 @@ fn build_popup_window(app: &AppHandle, label: &str, title: &str) {
     #[cfg(target_os = "linux")]
     {
         crate::linux_window::keep_windowed(&window);
-        position_after_map(&window, x, y);
+        position_after_map(&window, vertical_anchor(&corner), origin);
     }
     // A fired reminder must not stay invisible if its page never loads.
     startup::fallback_reveal(
@@ -209,20 +212,98 @@ fn build_popup_window(app: &AppHandle, label: &str, title: &str) {
     );
 }
 
+/// The vertical edge a popup keeps when its height changes: the one its
+/// configured screen position hangs it from.
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum VerticalAnchor {
+    Top,
+    Middle,
+    Bottom,
+}
+
+fn vertical_anchor(position: &str) -> VerticalAnchor {
+    match position {
+        "bottom-left" | "center-bottom" | "bottom-right" => VerticalAnchor::Bottom,
+        "center" | "center-left" | "center-right" => VerticalAnchor::Middle,
+        // "top-left" and any unknown value.
+        _ => VerticalAnchor::Top,
+    }
+}
+
+/// Top edge of a popup that was `old` tall at `top` and is `new` tall now.
+fn anchored_top(anchor: VerticalAnchor, top: f64, old: f64, new: f64) -> f64 {
+    match anchor {
+        VerticalAnchor::Top => top,
+        VerticalAnchor::Bottom => top + old - new,
+        VerticalAnchor::Middle => top + (old - new) / 2.0,
+    }
+}
+
+/// Fit a popup to the content height its page measured: the `missed` list is
+/// as tall as its cards, but never past `POPUP_MAX_SHARE` of the work area —
+/// beyond that the popup keeps part of the screen free and the list scrolls.
+/// The edge the popup's screen position hangs it from stays put, so a popup in
+/// a bottom corner grows upwards and shrinks back down into the corner.
+#[tauri::command]
+pub fn fit_popup_window(window: WebviewWindow, height: f64) -> Result<(), String> {
+    if window.label() != MISSED_LABEL && !window.label().starts_with(POPUP_PREFIX) {
+        return Err("not a popup window".into());
+    }
+    let corner = window
+        .app_handle()
+        .state::<AppState>()
+        .settings_lock()
+        .popup_corner
+        .clone();
+    let anchor = vertical_anchor(&corner);
+    let before = window.outer_size().map_err(|e| e.to_string())?;
+    let fitted = crate::modal_window::fit_height(&window, height, POPUP_MAX_SHARE)?;
+    // A window GTK has not mapped yet has no position of its own: X11 places
+    // it in `position_after_map`, Wayland leaves it to the compositor.
+    if window.is_visible().map_err(|e| e.to_string())? || !cfg!(target_os = "linux") {
+        let position = window.outer_position().map_err(|e| e.to_string())?;
+        let top = anchored_top(
+            anchor,
+            f64::from(position.y),
+            f64::from(before.height),
+            f64::from(fitted.outer.height),
+        );
+        window
+            .set_position(crate::modal_window::clamp_position(
+                PhysicalPosition::new(position.x, top.round() as i32),
+                fitted.outer,
+                fitted.area_position,
+                fitted.area_size,
+            ))
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+/// X11 window managers may ignore the initial move of an unmapped window, so
+/// the position is applied again on the first map. By then the page can have
+/// fitted the popup to its content (`fit_popup_window`), which opened at
+/// `POPUP_INNER_H`: the edge of its position is the one that stays.
+/// Native Wayland delegates all toplevel placement to the compositor.
 #[cfg(target_os = "linux")]
-fn position_after_map(window: &tauri::WebviewWindow, x: f64, y: f64) {
+fn position_after_map(
+    window: &tauri::WebviewWindow,
+    anchor: VerticalAnchor,
+    origin: (f64, f64, f64),
+) {
     use gtk::prelude::{GtkWindowExt, ObjectExt, WidgetExt, WidgetExtManual};
 
+    let (x, y, top) = origin;
     let Ok(window) = window.gtk_window() else {
         return;
     };
-    // X11 window managers may ignore the initial move of an unmapped
-    // window. Native Wayland delegates all toplevel placement to the compositor.
     if window.display().type_().name() == "GdkX11Display" {
         let positioned = std::cell::Cell::new(false);
         window.connect_map_event(move |window, _| {
             if !positioned.replace(true) {
-                window.move_(x.round() as i32, y.round() as i32);
+                let inner = f64::from(window.allocated_height()) / f64::from(window.scale_factor());
+                let top = anchored_top(anchor, y, POPUP_INNER_H, inner).max(top);
+                window.move_(x.round() as i32, top.round() as i32);
             }
             gtk::glib::Propagation::Proceed
         });
@@ -231,18 +312,25 @@ fn position_after_map(window: &tauri::WebviewWindow, x: f64, y: f64) {
 
 /// Popup geometry: inner size plus room for the native title bar.
 const POPUP_W: f64 = 440.0;
+/// The height the window opens with, before its page fits it to the content.
+const POPUP_INNER_H: f64 = 310.0;
+/// What the window measures with its native title bar.
 const POPUP_H: f64 = 342.0;
 // ~24px so the VISIBLE gap stays ~16px: GetWindowRect includes the
 // ~7px invisible resize border of the window.
 const POPUP_MARGIN: f64 = 24.0;
 /// Offset between stacked popups (card-deck style).
 const STACK_STEP: f64 = 36.0;
+/// The share of the work-area height a fitted popup may take at most. A
+/// fixed number would not help: on a small screen it still covers everything.
+const POPUP_MAX_SHARE: f64 = 2.0 / 3.0;
 
-/// Resolve the popup origin in logical px for the configured screen position.
+/// Resolve the popup origin in logical px for the configured screen position:
+/// its outer top-left corner and the top of the work area.
 /// The work area of the monitor under the cursor is used (falls back to the
 /// primary monitor), so the taskbar is never covered. Each subsequent open
 /// popup shifts aside like cards in a deck, without fully covering the rest.
-fn popup_origin(app: &AppHandle, position: &str, index: usize) -> (f64, f64) {
+fn popup_origin(app: &AppHandle, position: &str, index: usize) -> (f64, f64, f64) {
     let monitor = app
         .cursor_position()
         .ok()
@@ -252,20 +340,22 @@ fn popup_origin(app: &AppHandle, position: &str, index: usize) -> (f64, f64) {
     let Some(m) = monitor else {
         // No monitor info available: cascade from the top-left.
         let k = (index % 6) as f64 * STACK_STEP;
-        return (POPUP_MARGIN + k, POPUP_MARGIN + k);
+        return (POPUP_MARGIN + k, POPUP_MARGIN + k, f64::NEG_INFINITY);
     };
 
     let scale = m.scale_factor();
     let area = m.work_area();
     // Work area is in physical px, window positions in logical px.
-    origin_in_work_area(
+    let top = f64::from(area.position.y) / scale;
+    let (x, y) = origin_in_work_area(
         position,
         index,
         f64::from(area.position.x) / scale,
-        f64::from(area.position.y) / scale,
+        top,
         f64::from(area.size.width) / scale,
         f64::from(area.size.height) / scale,
-    )
+    );
+    (x, y, top)
 }
 
 fn origin_in_work_area(
@@ -349,6 +439,49 @@ mod tests {
         assert_eq!(
             origin_in_work_area("bottom-right", 1, -1280.0, -900.0, 1280.0, 880.0),
             (-500.0, -422.0)
+        );
+    }
+
+    #[test]
+    fn a_fitted_popup_keeps_the_edge_of_its_screen_position() {
+        assert_eq!(vertical_anchor("top-left"), VerticalAnchor::Top);
+        assert_eq!(vertical_anchor("center-top"), VerticalAnchor::Top);
+        assert_eq!(vertical_anchor("center-left"), VerticalAnchor::Middle);
+        assert_eq!(vertical_anchor("bottom-left"), VerticalAnchor::Bottom);
+        assert_eq!(vertical_anchor("center-bottom"), VerticalAnchor::Bottom);
+        assert_eq!(vertical_anchor("nonsense"), VerticalAnchor::Top);
+
+        // 300px taller: only the top edge stays put for a top position.
+        assert_eq!(
+            anchored_top(VerticalAnchor::Top, 100.0, 342.0, 642.0),
+            100.0
+        );
+        assert_eq!(
+            anchored_top(VerticalAnchor::Middle, 100.0, 342.0, 642.0),
+            -50.0
+        );
+        assert_eq!(
+            anchored_top(VerticalAnchor::Bottom, 100.0, 342.0, 642.0),
+            -200.0
+        );
+        // And shrinking brings it back down into the corner.
+        assert_eq!(
+            anchored_top(VerticalAnchor::Bottom, -200.0, 642.0, 342.0),
+            100.0
+        );
+    }
+
+    #[test]
+    fn a_fitted_popup_keeps_the_gap_to_the_work_area_edge() {
+        // 1920×1040 of work area, the bottom-right corner the app defaults to.
+        let (_, y) = origin_in_work_area("bottom-right", 0, 0.0, 0.0, 1920.0, 1040.0);
+        let grown = anchored_top(VerticalAnchor::Bottom, y, POPUP_H, POPUP_H + 300.0);
+        assert_eq!(grown + POPUP_H + 300.0, 1040.0 - POPUP_MARGIN);
+
+        let (_, y) = origin_in_work_area("top-right", 0, 0.0, 0.0, 1920.0, 1040.0);
+        assert_eq!(
+            anchored_top(VerticalAnchor::Top, y, POPUP_H, POPUP_H + 300.0),
+            POPUP_MARGIN
         );
     }
 

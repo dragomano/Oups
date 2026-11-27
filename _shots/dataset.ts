@@ -335,6 +335,14 @@ export function completedReminders(lang: string): Reminder[] {
   );
 }
 
+/** [index into the active set, minutes behind the clock]: varied cards, each at its own distance from now. */
+const MISSED: [number, number][] = [
+  [0, 120],
+  [1, 60],
+  [11, 300],
+  [4, 1500],
+];
+
 /**
  * The popup window's own reminders. A reminder the scheduler has just fired is
  * already advanced, so `nextDue` holds a moment behind the clock.
@@ -348,5 +356,5 @@ export function popupReminders(lang: string, kind: "single" | "missed"): Reminde
 
   if (kind === "single") return [active[0]];
 
-  return [missed(active[0], 120), missed(active[1], 60), missed(active[11], 300), missed(active[4], 1500)];
+  return MISSED.map(([index, minutesAgo]) => missed(active[index], minutesAgo));
 }

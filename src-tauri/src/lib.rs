@@ -145,6 +145,7 @@ pub fn run() {
             editor_window::fit_editor_window,
             commands::main_window_ready,
             commands::popup_window_ready,
+            scheduler::fit_popup_window,
             commands::window_control,
             commands::window_maximized,
             commands::app_name,

@@ -98,4 +98,9 @@ export async function verifySnoozeControls() {
   }
   if (frame) frame.style.width = originalWidth ?? "";
   await paint();
+  // The popup opens with its heading focused (Popup.svelte does that on
+  // mount); leave it that way instead of with a ring on a control the checks
+  // clicked, which Chrome styles by its own focus-visible heuristics.
+  document.querySelector<HTMLElement>("h1")?.focus({ preventScroll: true });
+  await paint();
 }

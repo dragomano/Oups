@@ -68,6 +68,19 @@ export async function invoke<T>(cmd: string, args?: Record<string, unknown>): Pr
           : { kind: "single", reminder: popupReminders(runtime.lang, "single")[0] }
       ) as T;
 
+    case "fit_popup_window":
+      // The real command resizes the window; here the shell owns the popup's
+      // frame and answers once it has applied the height.
+      return new Promise<T>((resolve) => {
+        const fitted = (event: MessageEvent) => {
+          if (event.data?.type !== "popup-fitted") return;
+          window.removeEventListener("message", fitted);
+          resolve(undefined as T);
+        };
+        window.addEventListener("message", fitted);
+        window.parent.postMessage({ type: "fit-popup", height: args?.height }, "*");
+      });
+
     case "window_maximized":
       // The captured window is never maximized, so the caption shows maximize.
       return false as T;

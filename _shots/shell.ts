@@ -3,7 +3,7 @@
 
 import "./no-motion";
 import "./freeze-clock";
-import { APP_H, APP_W, MISSED_H, POPUP_H, POPUP_MARGIN, POPUP_W } from "./geometry.mjs";
+import { APP_H, APP_W, POPUP_H, POPUP_MARGIN, POPUP_MAX_SHARE, POPUP_W } from "./geometry.mjs";
 import { readParams, runtime } from "./runtime";
 import { ready } from "./wait";
 
@@ -21,15 +21,26 @@ appFrame.style.height = `${APP_H}px`;
 appFrame.src = `/_shots/index.html?${query}`;
 
 if (runtime.popup) {
-  const height = runtime.popup === "missed" ? MISSED_H : POPUP_H;
-
+  // Both popups open at the window's size; the missed one is fitted below.
   popupFrame.style.display = "block";
   popupFrame.style.width = `${POPUP_W}px`;
-  popupFrame.style.height = `${height}px`;
+  popupFrame.style.height = `${POPUP_H}px`;
   popupFrame.style.left = `${APP_W - POPUP_W - POPUP_MARGIN}px`;
-  popupFrame.style.top = `${APP_H - height - POPUP_MARGIN}px`;
+  popupFrame.style.top = `${APP_H - POPUP_H - POPUP_MARGIN}px`;
   popupFrame.src = `/_shots/popup.html?popup=${runtime.popup}&lang=${runtime.lang}`;
 }
+
+// scheduler.rs::fit_popup_window: a popup takes the height its page measured,
+// never more than POPUP_MAX_SHARE of the work area (the canvas here), and
+// keeps its bottom edge.
+window.addEventListener("message", (event) => {
+  if (event.data?.type !== "fit-popup") return;
+  const limit = Math.floor((APP_H - POPUP_MARGIN) * POPUP_MAX_SHARE);
+  const height = Math.min(Math.max(1, Math.round(event.data.height)), limit);
+  popupFrame.style.height = `${height}px`;
+  popupFrame.style.top = `${APP_H - height - POPUP_MARGIN}px`;
+  (event.source as Window).postMessage({ type: "popup-fitted" }, "*");
+});
 
 if (runtime.scene === "editor" || runtime.scene === "settings") {
   popupFrame.style.display = "block";

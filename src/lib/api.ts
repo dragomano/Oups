@@ -54,6 +54,8 @@ export interface LocaleInfo {
 export const api = {
   mainWindowReady: () => invoke<void>("main_window_ready"),
   popupWindowReady: () => invoke<void>("popup_window_ready"),
+  /** Grows the popup to the content height it measured (clamped to the work area). */
+  fitPopupWindow: (height: number) => invoke<void>("fit_popup_window", { height }),
   windowControl: (action: WindowControl) => invoke<void>("window_control", { action }),
   windowMaximized: () => invoke<boolean>("window_maximized"),
   /** Whether the system material (Mica) shows behind the main window. */

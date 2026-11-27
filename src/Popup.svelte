@@ -13,6 +13,7 @@
 
   const id = $props.id();
   let heading = $state<HTMLHeadingElement>();
+  let wrap = $state<HTMLElement>();
   let missedList = $state<HTMLUListElement>();
   let pending = $state(false);
   let data = $state<PopupData | null>(null);
@@ -31,12 +32,40 @@
 
     if (data.kind === "missed") list = data.reminders;
 
+    // The window opens at a fixed size; give it the height its cards need
+    // before revealing it.
+    if (data.kind === "missed") await fitMissedWindow();
+
     // The window is created hidden; reveal it once the content is rendered,
     // so no blank WebView frame flashes.
     await tick();
     heading?.focus({ preventScroll: true });
     void api.popupWindowReady();
   });
+
+  /** Ask the backend for the natural height of the missed list. The window
+      is still hidden, but its layout is complete. */
+  async function fitMissedWindow() {
+    await tick();
+    if (!wrap || !missedList) return;
+    // The fitted window shows no scrollbar unless the list outgrows the work
+    // area, and cards wrap differently while one takes their width.
+    missedList.style.overflowY = "hidden";
+    const styles = getComputedStyle(wrap);
+    const gap = Number.parseFloat(styles.rowGap) || 0;
+    const padding = Number.parseFloat(styles.paddingTop) + Number.parseFloat(styles.paddingBottom);
+    const children = Array.from(wrap.children) as HTMLElement[];
+    const content = children.reduce((sum, el) => sum + el.scrollHeight, 0)
+      + gap * Math.max(0, children.length - 1)
+      + padding;
+    missedList.style.overflowY = "";
+    try {
+      // A pixel of slack: rounding must not bring the scrollbar back.
+      await api.fitPopupWindow(Math.ceil(content) + 2);
+    } catch (error) {
+      console.error("failed to size the missed window", error);
+    }
+  }
 
   function closeSelf() {
     getCurrentWebviewWindow().close();
@@ -68,6 +97,8 @@
           missedList?.querySelectorAll("button")[Math.min(index, list.length - 1)]?.focus();
         }
       }
+      // The last card makes the backend close the window.
+      if (list.length) await fitMissedWindow();
     } catch (error) {
       alert(t("msg.action_failed", { err: String(error) }));
     }
@@ -147,7 +178,7 @@
     {@render delayControls(t("popup.snooze"), t("popup.close"), closeSelf)}
   </main>
 {:else if isMissed}
-  <main class="wrap">
+  <main class="wrap" bind:this={wrap}>
     <h1 bind:this={heading} tabindex="-1">{title}</h1>
     <ul class="missed-list" role="list" bind:this={missedList}>
       {#each list as r (r.id)}
@@ -283,11 +314,13 @@
     }
   }
 
+  /* The list alone scrolls, and only once it outgrows the fitted window. */
   .missed-list {
     list-style: none;
     margin: 0;
     padding: 0;
     overflow-y: auto;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     gap: 8px;

@@ -1,5 +1,5 @@
 use tauri::{
-    AppHandle, LogicalSize, Manager, PhysicalPosition, PhysicalSize, WebviewUrl,
+    AppHandle, LogicalSize, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow,
     WebviewWindowBuilder, Window, WindowEvent,
 };
 
@@ -119,7 +119,96 @@ pub fn fit_settings_window(app: AppHandle, height: f64) -> Result<(), String> {
     fit(&app, "settings", height)
 }
 
-fn fitted_size(
+/// The height a page measured for its content.
+fn content_height(height: f64) -> Result<f64, String> {
+    if height.is_finite() && height > 0.0 {
+        Ok(height)
+    } else {
+        Err("invalid window height".into())
+    }
+}
+
+/// A window fitted by `fit_height`: the outer size it ended up with and the
+/// work area it has to stay inside.
+pub(crate) struct Fitted {
+    pub outer: PhysicalSize<u32>,
+    pub area_position: PhysicalPosition<i32>,
+    pub area_size: PhysicalSize<u32>,
+}
+
+/// Resize `window` to the content height its page measured, keeping its width
+/// and never growing past `max_share` of its monitor's work-area height.
+pub(crate) fn fit_height(
+    window: &WebviewWindow,
+    height: f64,
+    max_share: f64,
+) -> Result<Fitted, String> {
+    let height = content_height(height)?;
+    let monitor = window
+        .current_monitor()
+        .map_err(|e| e.to_string())?
+        .or(window
+            .app_handle()
+            .primary_monitor()
+            .map_err(|e| e.to_string())?)
+        .ok_or("monitor missing")?;
+    let scale = monitor.scale_factor();
+    let area = monitor.work_area();
+    let outer = window.outer_size().map_err(|e| e.to_string())?;
+    let inner = window.inner_size().map_err(|e| e.to_string())?;
+    let size = fitted_size(
+        inner.width as f64 / scale,
+        height,
+        LogicalSize::new(
+            area.size.width as f64 / scale,
+            height_limit(area.size.height as f64 / scale, max_share),
+        ),
+        LogicalSize::new(
+            outer.width.saturating_sub(inner.width) as f64 / scale,
+            outer.height.saturating_sub(inner.height) as f64 / scale,
+        ),
+    );
+    // tao turns a requested inner size into a window size by adding the frame
+    // it measures, and a window that has never been shown still reports the
+    // frame it was created with — caption height included. The first resize
+    // therefore lands wrong; repeat until the inner size holds.
+    #[cfg(not(target_os = "linux"))]
+    let fitted_outer = {
+        let mut previous = None;
+        for _ in 0..3 {
+            window.set_size(size).map_err(|e| e.to_string())?;
+            let got = window.inner_size().map_err(|e| e.to_string())?;
+            if previous == Some(got) {
+                break;
+            }
+            previous = Some(got);
+        }
+        window.outer_size().map_err(|e| e.to_string())?
+    };
+    // GTK takes the size on its next configure event, so the window still
+    // reports the size it had: add what the request changes.
+    #[cfg(target_os = "linux")]
+    let fitted_outer = {
+        crate::linux_window::fit_modal(window, size).map_err(|e| e.to_string())?;
+        let grown = size.to_physical::<u32>(scale);
+        PhysicalSize::new(
+            outer.width + grown.width.saturating_sub(inner.width),
+            outer.height + grown.height.saturating_sub(inner.height),
+        )
+    };
+    Ok(Fitted {
+        outer: fitted_outer,
+        area_position: area.position,
+        area_size: area.size,
+    })
+}
+
+/// The height a window may take at most: its share of the work-area height.
+fn height_limit(work_height: f64, max_share: f64) -> f64 {
+    work_height * max_share.clamp(0.0, 1.0)
+}
+
+pub(crate) fn fitted_size(
     width: f64,
     content_height: f64,
     available: LogicalSize<f64>,
@@ -135,7 +224,7 @@ fn fitted_size(
     )
 }
 
-fn clamp_position(
+pub(crate) fn clamp_position(
     position: PhysicalPosition<i32>,
     size: PhysicalSize<u32>,
     origin: PhysicalPosition<i32>,
@@ -154,54 +243,31 @@ fn clamp_position(
 }
 
 pub fn fit(app: &AppHandle, label: &str, height: f64) -> Result<(), String> {
-    if !height.is_finite() || height <= 0.0 {
-        return Err("invalid modal height".into());
-    }
     let window = app
         .get_webview_window(label)
         .ok_or("modal window missing")?;
     let main = app
         .get_webview_window("main")
         .ok_or("main window missing")?;
-    let monitor = window
-        .current_monitor()
-        .map_err(|e| e.to_string())?
-        .or(main.current_monitor().map_err(|e| e.to_string())?)
-        .ok_or("monitor missing")?;
-    let scale = monitor.scale_factor();
-    let area = monitor.work_area();
-    let outer = window.outer_size().map_err(|e| e.to_string())?;
-    let inner = window.inner_size().map_err(|e| e.to_string())?;
-    let size = fitted_size(
-        inner.width as f64 / scale,
-        height,
-        LogicalSize::new(
-            area.size.width as f64 / scale,
-            area.size.height as f64 / scale,
-        ),
-        LogicalSize::new(
-            outer.width.saturating_sub(inner.width) as f64 / scale,
-            outer.height.saturating_sub(inner.height) as f64 / scale,
-        ),
-    );
-    #[cfg(target_os = "linux")]
-    crate::linux_window::fit_modal(&window, size).map_err(|e| e.to_string())?;
-    #[cfg(not(target_os = "linux"))]
-    window.set_size(size).map_err(|e| e.to_string())?;
+    let fitted = fit_height(&window, height, 1.0)?;
     let visible = window.is_visible().map_err(|e| e.to_string())?;
-    let outer = window.outer_size().map_err(|e| e.to_string())?;
     let position = if visible {
         window.outer_position().map_err(|e| e.to_string())?
     } else {
         let main_size = main.outer_size().map_err(|e| e.to_string())?;
         let origin = main.outer_position().map_err(|e| e.to_string())?;
         PhysicalPosition::new(
-            origin.x + (main_size.width as i32 - outer.width as i32) / 2,
-            origin.y + (main_size.height as i32 - outer.height as i32) / 2,
+            origin.x + (main_size.width as i32 - fitted.outer.width as i32) / 2,
+            origin.y + (main_size.height as i32 - fitted.outer.height as i32) / 2,
         )
     };
     window
-        .set_position(clamp_position(position, outer, area.position, area.size))
+        .set_position(clamp_position(
+            position,
+            fitted.outer,
+            fitted.area_position,
+            fitted.area_size,
+        ))
         .map_err(|e| e.to_string())?;
     if !visible {
         window.show().map_err(|e| e.to_string())?;
@@ -249,6 +315,24 @@ mod tests {
                 assert_eq!(owner_action(label, &event), None);
             }
         }
+    }
+
+    #[test]
+    fn a_fitted_window_needs_a_real_content_height() {
+        assert_eq!(content_height(582.0), Ok(582.0));
+        for height in [f64::NAN, f64::INFINITY, 0.0, -10.0] {
+            assert!(content_height(height).is_err(), "{height}");
+        }
+    }
+
+    #[test]
+    fn a_share_of_the_work_area_leaves_the_rest_of_the_screen_free() {
+        let third = height_limit(900.0, 1.0 / 3.0);
+        assert!((third - 300.0).abs() < 1e-9, "{third}");
+        assert_eq!(height_limit(900.0, 1.0), 900.0);
+        assert_eq!(height_limit(900.0, 0.0), 0.0);
+        assert_eq!(height_limit(900.0, 5.0), 900.0);
+        assert_eq!(height_limit(900.0, -1.0), 0.0);
     }
 
     #[test]
